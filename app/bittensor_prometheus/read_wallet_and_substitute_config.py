@@ -3,7 +3,6 @@ import pathlib
 
 import bittensor
 
-
 BITTENSOR_WALLET_NAME = os.environ.get("BITTENSOR_WALLET_NAME")
 BITTENSOR_WALLET_HOTKEY_NAME = os.environ.get("BITTENSOR_WALLET_HOTKEY_NAME")
 

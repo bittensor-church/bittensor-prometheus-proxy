@@ -1,20 +1,20 @@
 from http import HTTPStatus
 from urllib.parse import urljoin
 
+import requests
+import snappy
+import structlog
 from django.conf import settings
 from django.http import HttpResponse
-from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from .prometheus_protobuf import remote_pb2
-
-import requests
-import structlog
-import snappy
+from django.views.decorators.http import require_POST
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 from project.core.models import Validator
-from .metrics import series_counter, metrics_counter
+
+from .metrics import metrics_counter, series_counter
+from .prometheus_protobuf import remote_pb2
 
 logger = structlog.getLogger(__name__)
 retries = Retry(

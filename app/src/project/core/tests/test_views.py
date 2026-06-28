@@ -1,5 +1,5 @@
 from http import HTTPStatus
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import bittensor
 import pytest
@@ -126,7 +126,7 @@ def test_outbound__sends_netuid_header(mock_settings, mock_session, client):
     mock_session.post.return_value = mock_response
 
     data = b"some-metric-data"
-    response = client.post(
+    client.post(
         "/prometheus_outbound_proxy/",
         data=data,
         content_type="application/octet-stream",
