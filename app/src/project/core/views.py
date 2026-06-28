@@ -34,6 +34,22 @@ session.mount("http://", HTTPAdapter(max_retries=retries))
 session.mount("https://", HTTPAdapter(max_retries=retries))
 
 
+def _validate_timeseries(ts, ss58_address: str) -> tuple[str | None, str]:
+    """Return (error_message, metric_name). error_message is None if the timeseries is valid."""
+    name = "<undefined>"
+    hotkey = None
+    for label in ts.labels:
+        if label.name == "__name__":
+            name = label.value
+        if label.name == "hotkey":
+            hotkey = label.value
+    if not hotkey:
+        return "Received no hotkey", name
+    if hotkey != ss58_address:
+        return f"Received invalid hotkey. Expected {ss58_address} got {hotkey}", name
+    return None, name
+
+
 @csrf_exempt
 @require_POST
 def prometheus_outbound_proxy(request):
@@ -45,15 +61,16 @@ def prometheus_outbound_proxy(request):
 
     prometheus_remote_url = urljoin(settings.CENTRAL_PROMETHEUS_PROXY_URL, "prometheus_inbound_proxy/")
 
+    wallet = settings.BITTENSOR_WALLET()
     try:
         response = session.post(
             prometheus_remote_url,
             data=data,
             headers={
-                "Bittensor-Signature": settings.BITTENSOR_WALLET().hotkey.sign(data).hex(),
-                "Bittensor-Hotkey": settings.BITTENSOR_WALLET().hotkey.ss58_address,
-                "Bittensor-Netuid": str(settings.BITTENSOR_NETUID),
                 **request.headers,
+                "Bittensor-Signature": wallet.hotkey.sign(data).hex(),
+                "Bittensor-Hotkey": wallet.hotkey.ss58_address,
+                "Bittensor-Netuid": str(settings.BITTENSOR_NETUID),
             },
             timeout=TIMEOUT,
         )
@@ -120,7 +137,7 @@ def prometheus_inbound_proxy(request):
     try:
         decompressed_data = snappy.uncompress(data)
     except Exception as e:
-        msg = f"Failed to decompress data: {str(e)}"
+        msg = f"Failed to decompress data: {e}"
         logger.debug(msg)
         return HttpResponse(msg.encode(), status=HTTPStatus.BAD_REQUEST)
 
@@ -128,33 +145,17 @@ def prometheus_inbound_proxy(request):
         write_request = remote_pb2.WriteRequest()
         write_request.ParseFromString(decompressed_data)
     except Exception as e:
-        msg = f"Failed to decode metrics: {str(e)}"
+        msg = f"Failed to decode metrics: {e}"
         logger.debug(msg)
         return HttpResponse(msg, status=HTTPStatus.BAD_REQUEST)
 
     series_count = 0
     metrics = set()
     for ts in write_request.timeseries:
-        name = "<undefined>"
-        error = None
-        hotkey = None
-
-        for label in ts.labels:
-            if label.name == "hotkey":
-                hotkey = label.value
-                if label.value != ss58_address:
-                    msg = f"Received invalid hotkey. Expected {ss58_address} got {label.value}"
-                    error = HttpResponse(status=HTTPStatus.FORBIDDEN, content=msg.encode())
-            if label.name == "__name__":
-                name = label.value
-        if not hotkey:
-            msg = "Received no hotkey"
-            error = HttpResponse(status=HTTPStatus.FORBIDDEN, content=msg.encode())
-
-        if error is not None:
-            error.content = f"Metric: {name}. ".encode() + error.content
-            logger.info(error.content.decode())
-            return error
+        error_msg, name = _validate_timeseries(ts, ss58_address)
+        if error_msg:
+            logger.info("Metric: %s. %s", name, error_msg)
+            return HttpResponse(status=HTTPStatus.FORBIDDEN, content=f"Metric: {name}. {error_msg}".encode())
         series_count += 1
         metrics.add(name)
 

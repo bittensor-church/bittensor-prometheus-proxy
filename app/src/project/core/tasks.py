@@ -33,20 +33,23 @@ def send_to_dead_letter_queue(task: Task, exc, task_id, args, kwargs, einfo):
     task.apply_async(args=args, kwargs=kwargs, queue="dead_letter")
 
 
+def _log_failure(exc: Exception) -> None:
+    last_success = cache.get(LAST_SUCCESS_KEY)
+    if last_success is None or time.time() - last_success > FAILURE_ERROR_THRESHOLD:
+        logger.error("fetch_validators has been failing for more than 2 hours", exc_info=exc)
+    else:
+        logger.info("fetch_validators failed, will retry", exc_info=exc)
+
+
 @app.task
 def fetch_validators():
-    try:
-        contact = subtensor_contact()
-        keys_by_netuid: dict[int, set[str]] = {
-            netuid: set(contact.get_validator_hotkeys(netuid)) for netuid in settings.BITTENSOR_NETUIDS
-        }
-    except Exception as exc:
-        last_success = cache.get(LAST_SUCCESS_KEY)
-        if last_success is None or time.time() - last_success > FAILURE_ERROR_THRESHOLD:
-            logger.error("fetch_validators has been failing for more than 2 hours", exc_info=exc)
-        else:
-            logger.info("fetch_validators failed, will retry", exc_info=exc)
-        return
+    contact = subtensor_contact()
+    keys_by_netuid: dict[int, set[str]] = {}
+    for netuid in settings.BITTENSOR_NETUIDS:
+        try:
+            keys_by_netuid[netuid] = set(contact.get_validator_hotkeys(netuid))
+        except Exception as exc:
+            _log_failure(exc)
 
     for netuid, validator_keys in keys_by_netuid.items():
         debug_keys = set(
@@ -67,8 +70,7 @@ def fetch_validators():
                 validator.active = False
                 to_deactivate.append(validator)
 
-        for key in validator_keys:
-            to_create.append(Validator(public_key=key, netuid=netuid, active=True))
+        to_create = [Validator(public_key=key, netuid=netuid, active=True) for key in validator_keys]
 
         Validator.objects.bulk_create(to_create)
         Validator.objects.bulk_update(to_activate + to_deactivate, ["active"])
@@ -80,4 +82,5 @@ def fetch_validators():
             created=len(to_create),
         )
 
-    cache.set(LAST_SUCCESS_KEY, time.time(), timeout=None)
+    if keys_by_netuid:
+        cache.set(LAST_SUCCESS_KEY, time.time(), timeout=None)

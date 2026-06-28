@@ -119,3 +119,26 @@ def test_fetch_validators__logs_error_when_never_succeeded(mock_logger, mock_con
     fetch_validators()
 
     mock_logger.error.assert_called_once()
+
+
+@pytest.mark.django_db
+@override_settings(BITTENSOR_NETUIDS=[12, 22])
+def test_fetch_validators__partial_failure_updates_successful_netuids(mock_contact):
+    mock_contact.add_behavior("get_validator_hotkeys", ["5Alice"])
+    mock_contact.add_behavior("get_validator_hotkeys", Exception("rpc error"))
+
+    fetch_validators()
+
+    assert Validator.objects.filter(public_key="5Alice", netuid=12, active=True).exists()
+    ts = cache.get(LAST_SUCCESS_KEY)
+    assert ts is not None
+
+
+@pytest.mark.django_db
+@override_settings(BITTENSOR_NETUIDS=[12])
+def test_fetch_validators__all_fail_does_not_update_last_success(mock_contact):
+    mock_contact.add_behavior("get_validator_hotkeys", Exception("rpc error"))
+
+    fetch_validators()
+
+    assert cache.get(LAST_SUCCESS_KEY) is None
