@@ -7,7 +7,6 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .prometheus_protobuf import remote_pb2
 
-import bittensor
 import requests
 import structlog
 import snappy
@@ -108,6 +107,7 @@ def prometheus_inbound_proxy(request):
         logger.debug(msg)
         return HttpResponse(status=HTTPStatus.FORBIDDEN, content=msg)
 
+    import bittensor
     sender_keypair = bittensor.Keypair(ss58_address)
     if not sender_keypair.verify(data, "0x" + signature):
         msg = "Bad signature."
