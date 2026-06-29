@@ -27,7 +27,7 @@ dependencies = [
     "django-health-check>=3.18.1,<4",
     "requests>=2.32.3,<3",
     "bittensor~=9.9",
-    "compute_horde",
+    "bittensor-pylon-client",
     "django-cacheops>=7.1,<8",
     "python-snappy==0.7.3",
     "protobuf>=5.28.3,<6",
@@ -64,6 +64,7 @@ type_check = [
 [tool.ruff]
 src = ["app/src"]
 line-length = 120
+exclude = ["**/prometheus_protobuf/**.py"]
 
 [tool.ruff.lint]
 # TODO add D

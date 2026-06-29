@@ -24,6 +24,14 @@ services:
     ports:
       - ${POSTGRES_PORT}:5432
 
+  bittensor-pylon:
+    image: docker.io/backenddevelopersltd/bittensor-pylon:2.2.0
+    restart: unless-stopped
+    environment:
+      - PYLON_OPEN_ACCESS_TOKEN=${PYLON_OPEN_ACCESS_TOKEN}
+    ports:
+      - ${PYLON_PORT}:8000
+
   central-prometheus:
     image: prom/prometheus:v2.46.0
     command:

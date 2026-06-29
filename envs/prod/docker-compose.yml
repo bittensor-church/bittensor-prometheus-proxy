@@ -53,6 +53,7 @@ services:
     depends_on:
       - redis
       - db
+      - bittensor-pylon
     logging:
       <<: *logging
 
@@ -183,6 +184,13 @@ services:
   
 
   
+  bittensor-pylon:
+    image: docker.io/backenddevelopersltd/bittensor-pylon:2.2.0
+    restart: unless-stopped
+    env_file: ./.env
+    logging:
+      <<: *logging
+
   promtail:
     image: grafana/promtail:2.9.2
     restart: unless-stopped
@@ -201,7 +209,7 @@ services:
       - -config.expand-env=true
     logging:
       <<: *logging
-  
+
 
 volumes:
   backend-static:

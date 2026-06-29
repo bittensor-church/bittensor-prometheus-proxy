@@ -155,4 +155,7 @@ def test(session):
             "auto",
             "project",
             *session.posargs,
+            # bittensor unconditionally creates ~/.bittensor/miners on import;
+            # redirect HOME so it has a writable location in restricted CI environments
+            env={"HOME": tempfile.gettempdir()},
         )

@@ -1,6 +1,7 @@
 """
 Django settings for project project.
 """
+
 import functools
 import inspect
 import logging
@@ -8,7 +9,6 @@ import pathlib
 from datetime import timedelta
 from functools import wraps
 
-import bittensor
 import environ
 import structlog
 
@@ -248,14 +248,14 @@ CONSTANCE_CONFIG = {
 
 if REDIS_HOST:
     CACHEOPS_REDIS = {
-        'host': REDIS_HOST,
-        'port': REDIS_PORT,
-        'db': 1,
-        'socket_timeout': 3,
+        "host": REDIS_HOST,
+        "port": REDIS_PORT,
+        "db": 1,
+        "socket_timeout": 3,
     }
 
     CACHEOPS = {
-        'project.core.Validator': {'ops': 'all', 'timeout': 60*15},
+        "project.core.Validator": {"ops": "all", "timeout": 60 * 15},
     }
 
     CACHEOPS_DEGRADE_ON_FAILURE = True
@@ -271,7 +271,7 @@ if REDIS_HOST:
     CELERY_BEAT_SCHEDULE = {  # type: ignore
         "fetch_validators": {
             "task": "project.core.tasks.fetch_validators",
-            "schedule": 60,
+            "schedule": 300,
             "options": {},
         },
     }
@@ -345,18 +345,27 @@ UPSTREAM_PROMETHEUS_URL = env.str("UPSTREAM_PROMETHEUS_URL", default="")
 if not UPSTREAM_PROMETHEUS_URL and not CENTRAL_PROMETHEUS_PROXY_URL:
     raise RuntimeError("Either UPSTREAM_PROMETHEUS_URL or CENTRAL_PROMETHEUS_PROXY_URL must be set")
 
-BITTENSOR_NETUID = env.int("BITTENSOR_NETUID", default=None)
-BITTENSOR_NETWORK = env.str("BITTENSOR_NETWORK", default=None)
+# Central proxy: list of supported netuids, e.g. "12,22" -> [12, 22]
+_netuids_raw = env.list("BITTENSOR_NETUIDS", default=[])
+BITTENSOR_NETUIDS: list[int] = [int(n) for n in _netuids_raw]
+
+PYLON_ENDPOINT = env.str("PYLON_ENDPOINT", default="")
+PYLON_OPEN_ACCESS_TOKEN = env.str("PYLON_OPEN_ACCESS_TOKEN", default="")
 
 if UPSTREAM_PROMETHEUS_URL:
-    if BITTENSOR_NETUID is None or BITTENSOR_NETWORK is None:
-        raise RuntimeError("Both BITTENSOR_NETUID and BITTENSOR_NETWORK must be set when "
-                           "UPSTREAM_PROMETHEUS_URL is defined")
+    if not BITTENSOR_NETUIDS:
+        raise RuntimeError("BITTENSOR_NETUIDS must be set when UPSTREAM_PROMETHEUS_URL is defined")
+    if not PYLON_ENDPOINT:
+        raise RuntimeError("PYLON_ENDPOINT must be set when UPSTREAM_PROMETHEUS_URL is defined")
     if not DATABASES:
-        raise RuntimeError("Either DATABASE_POOL_URL or DATABASE_URL must be set when "
-                           "UPSTREAM_PROMETHEUS_URL is defined")
+        raise RuntimeError(
+            "Either DATABASE_POOL_URL or DATABASE_URL must be set when UPSTREAM_PROMETHEUS_URL is defined"
+        )
     if not REDIS_HOST:
         raise RuntimeError("REDIS_HOST must be set when UPSTREAM_PROMETHEUS_URL is defined")
+
+# On-site proxy: single netuid this node belongs to
+BITTENSOR_NETUID = env.int("BITTENSOR_NETUID", default=None)
 
 
 BITTENSOR_WALLET_DIRECTORY = env.path(
@@ -367,13 +376,19 @@ BITTENSOR_WALLET_NAME = env.str("BITTENSOR_WALLET_NAME", default=None)
 BITTENSOR_WALLET_HOTKEY_NAME = env.str("BITTENSOR_WALLET_HOTKEY_NAME", default=None)
 
 if CENTRAL_PROMETHEUS_PROXY_URL:
+    if BITTENSOR_NETUID is None:
+        raise RuntimeError("BITTENSOR_NETUID must be set when CENTRAL_PROMETHEUS_PROXY_URL is defined")
     if BITTENSOR_WALLET_NAME is None or BITTENSOR_WALLET_HOTKEY_NAME is None:
-        raise RuntimeError("Both BITTENSOR_WALLET_NAME and BITTENSOR_WALLET_HOTKEY_NAME must be set when "
-                           "CENTRAL_PROMETHEUS_PROXY_URL is defined")
+        raise RuntimeError(
+            "Both BITTENSOR_WALLET_NAME and BITTENSOR_WALLET_HOTKEY_NAME must be set when "
+            "CENTRAL_PROMETHEUS_PROXY_URL is defined"
+        )
 
 
 @functools.cache
-def BITTENSOR_WALLET() -> bittensor.wallet:
+def BITTENSOR_WALLET():
+    import bittensor
+
     if not BITTENSOR_WALLET_NAME or not BITTENSOR_WALLET_HOTKEY_NAME:
         raise RuntimeError("Wallet not configured")
     wallet = bittensor.wallet(
