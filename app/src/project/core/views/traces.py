@@ -14,6 +14,7 @@ from ..proxy_auth import validate_bittensor_request
 from ..proxy_outbound import (
     HEADERS_TO_STRIP,
     TIMEOUT,
+    BodyTooLargeError,
     build_bittensor_outbound_headers,
     build_forwarded_response,
     decompress_body,
@@ -68,6 +69,8 @@ def traces_outbound_proxy(request):
 
     try:
         data = decompress_body(request.body, request.headers)
+    except BodyTooLargeError:
+        return HttpResponse(status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE, content=b"Body too large")
     except Exception as e:
         msg = f"Failed to decompress data: {e}"
         logger.debug(msg)
