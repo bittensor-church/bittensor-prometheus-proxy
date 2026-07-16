@@ -26,7 +26,7 @@ ENV PYTHONPATH=/opt/pypackages/lib:$PYTHONPATH
 COPY ./app/src/ ./app/envs/prod/entrypoint.sh ./app/envs/prod/gunicorn.conf.py ./app/envs/prod/celery-entrypoint.sh ./app/envs/prod/prometheus-cleanup.sh /root/src/
 
 RUN python3 -m compileall -b -f -q /root/
-RUN CENTRAL_PROMETHEUS_PROXY_URL=localhost BITTENSOR_WALLET_NAME=a BITTENSOR_WALLET_HOTKEY_NAME=b ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy python3 manage.py collectstatic --no-input --clear
+RUN CENTRAL_PROMETHEUS_PROXY_URL=localhost BITTENSOR_NETUID=1 BITTENSOR_WALLET_NAME=a BITTENSOR_WALLET_HOTKEY_NAME=b ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy python3 manage.py collectstatic --no-input --clear
 
 
 FROM $BASE_IMAGE AS secondary-image
