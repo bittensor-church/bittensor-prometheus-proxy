@@ -5,7 +5,7 @@
 groups = ["default", "lint", "test", "type-check"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:b212dacd3e20d82afa83a28737b868c5d6c12c22f7ddba0261a8c6fc7bd195b0"
+content_hash = "sha256:2bfc6e282f6332712d843707eb7dd9bb07777041c4e7d3749649d1235a37e34a"
 
 [[metadata.targets]]
 requires_python = "==3.11.*"
@@ -116,7 +116,7 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.14.1"
+version = "4.14.2"
 requires_python = ">=3.10"
 summary = "High-level concurrency and networking framework on top of asyncio or Trio"
 groups = ["default"]
@@ -126,8 +126,8 @@ dependencies = [
     "typing-extensions>=4.5; python_version < \"3.13\"",
 ]
 files = [
-    {file = "anyio-4.14.1-py3-none-any.whl", hash = "sha256:4e5533c5b8ff0a24f5d7a176cbe6877129cd183893f66b537f8f227d10527d72"},
-    {file = "anyio-4.14.1.tar.gz", hash = "sha256:8d648a3544c1a700e3ff78615cd679e4c5c3f149904287e73687b2596963629e"},
+    {file = "anyio-4.14.2-py3-none-any.whl", hash = "sha256:9f505dda5ac9f0c8309b5e8bd445a8c2bf7246f3ce950121e45ea15bc41d1494"},
+    {file = "anyio-4.14.2.tar.gz", hash = "sha256:cfa139f3ed1a23ee8f88a145ddb5ac7605b8bbfd8592baacd7ce3d8bb4313c7f"},
 ]
 
 [[package]]
@@ -170,16 +170,16 @@ files = [
 
 [[package]]
 name = "asgiref"
-version = "3.11.1"
-requires_python = ">=3.9"
+version = "3.12.1"
+requires_python = ">=3.10"
 summary = "ASGI specs, helper code, and adapters"
 groups = ["default", "type-check"]
 dependencies = [
     "typing-extensions>=4; python_version < \"3.11\"",
 ]
 files = [
-    {file = "asgiref-3.11.1-py3-none-any.whl", hash = "sha256:e8667a091e69529631969fd45dc268fa79b99c92c5fcdda727757e52146ec133"},
-    {file = "asgiref-3.11.1.tar.gz", hash = "sha256:5f184dc43b7e763efe848065441eac62229c9f7b0475f41f80e207a114eda4ce"},
+    {file = "asgiref-3.12.1-py3-none-any.whl", hash = "sha256:fe386d1c2bff7259ea95929266d12a8cf9a8b5a1c2598402967d8792e7a7c094"},
+    {file = "asgiref-3.12.1.tar.gz", hash = "sha256:59dcb51c272ad209d59bed5708a64a333083e86017d7fcdd67498eeab7784340"},
 ]
 
 [[package]]
@@ -211,31 +211,32 @@ files = [
 
 [[package]]
 name = "asttokens"
-version = "3.0.1"
+version = "3.0.2"
 requires_python = ">=3.8"
 summary = "Annotate AST trees with source code positions"
 groups = ["default", "test"]
 files = [
-    {file = "asttokens-3.0.1-py3-none-any.whl", hash = "sha256:15a3ebc0f43c2d0a50eeafea25e19046c68398e487b9f1f5b517f7c0f40f976a"},
-    {file = "asttokens-3.0.1.tar.gz", hash = "sha256:71a4ee5de0bde6a31d64f6b13f2293ac190344478f081c3d1bccfcf5eacb0cb7"},
+    {file = "asttokens-3.0.2-py3-none-any.whl", hash = "sha256:9da13157f5b28becde0bd374fc677dcd3c290614264eff096f167c469cd9f933"},
+    {file = "asttokens-3.0.2.tar.gz", hash = "sha256:3ecdbd8f2cc195f53ccada3a613538bb5f9ef6f6869129f13e03c30a677b8fe2"},
 ]
 
 [[package]]
 name = "async-substrate-interface"
-version = "2.2.1"
+version = "1.6.4"
 requires_python = "<3.15,>=3.10"
 summary = "Asyncio library for interacting with substrate. Mostly API-compatible with py-substrate-interface"
 groups = ["default"]
 dependencies = [
     "aiosqlite<1.0.0,>=0.21.0",
-    "cyscale<1.0.0,>=0.3.3",
-    "typing-extensions>=4.0.0; python_version < \"3.11\"",
+    "bt-decode==v0.8.0",
+    "scalecodec~=1.2.11",
     "websockets>=14.1",
+    "wheel",
     "xxhash",
 ]
 files = [
-    {file = "async_substrate_interface-2.2.1-py3-none-any.whl", hash = "sha256:448a5a9843d2498bb57b28fd91b131cec01d3e8a710886fcec550283a00180cf"},
-    {file = "async_substrate_interface-2.2.1.tar.gz", hash = "sha256:bd5ca091dfbbbb27d0bba6fc0e24aea3ca5a00c7439e23d0bacd0c8270c85ffd"},
+    {file = "async_substrate_interface-1.6.4-py3-none-any.whl", hash = "sha256:7f127f5fc2a66cfd0b9bd232809f5af7ef36f545679d35b7fb71b476887dafd4"},
+    {file = "async_substrate_interface-1.6.4.tar.gz", hash = "sha256:982fd9c7102176d509a5bc31a1cbee0ba6c6dff7629328a94b08cad155520aad"},
 ]
 
 [[package]]
@@ -378,17 +379,37 @@ files = [
 
 [[package]]
 name = "bittensor-wallet"
-version = "4.1.0"
+version = "4.1.1"
 requires_python = ">=3.10"
 summary = ""
 groups = ["default"]
 files = [
-    {file = "bittensor_wallet-4.1.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:0915cfc9327b15279e8d8d9e2a11b2ed9a559339545cc55fe0bce13fd39564e0"},
-    {file = "bittensor_wallet-4.1.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:591c51f60bb8536750c3ce6092efe83f1a1f55778a5bf5db69dc8bedfd71872a"},
-    {file = "bittensor_wallet-4.1.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:db5f506839402d680b7a0aadde893faa162ba746a75708f455f4f11a691fbdfb"},
-    {file = "bittensor_wallet-4.1.0-cp311-cp311-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:d96e5202f898c3d1035d7844a946d4fb42fa522d65055e2f9d05224bf6ad6d2c"},
-    {file = "bittensor_wallet-4.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b25d5cb6bdbc6d20d4c347ec82938420a367c75b03e5d957857ca4df973afc2e"},
-    {file = "bittensor_wallet-4.1.0.tar.gz", hash = "sha256:f0f34641a4b9110def9e35fe22498195fcb31d143dc4f76dd9022db374ccd484"},
+    {file = "bittensor_wallet-4.1.1-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:d1f11c51cbd84a0553df2b0067b43e43cc39d4cc6a24785af62be9cd209d1d0d"},
+    {file = "bittensor_wallet-4.1.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:3428c388632eeebf2021251bc851fb1703278ffe29cf890cecb18df00775388b"},
+    {file = "bittensor_wallet-4.1.1-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:ae71deb08e5c6a473bc892aff509c292ce3f594c6d0c934d4dc13640051200d1"},
+    {file = "bittensor_wallet-4.1.1-cp311-cp311-manylinux_2_28_i686.whl", hash = "sha256:1f276e522e79573e3d076b08c6524ce99901da9f92d4a0a545dd5fed306618a2"},
+    {file = "bittensor_wallet-4.1.1-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:1d8194c71d4d210d4acd6bfe15c9e742eeeb8dc709d6138cbb97c55ad89aac32"},
+    {file = "bittensor_wallet-4.1.1.tar.gz", hash = "sha256:074df6eaa417e105039df72189cd68127f76fdcf8361f93a88e9f988ca8010d7"},
+]
+
+[[package]]
+name = "bt-decode"
+version = "0.8.0"
+requires_python = ">=3.9"
+summary = "A wrapper around the scale-codec crate for fast scale-decoding of Bittensor data structures."
+groups = ["default"]
+dependencies = [
+    "toml>=0.10.0",
+]
+files = [
+    {file = "bt_decode-0.8.0-cp311-cp311-macosx_10_12_x86_64.whl", hash = "sha256:66caa200c9323da28591be70fc91a6cd7d30d530384a0efec084ff6fa1a73e73"},
+    {file = "bt_decode-0.8.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:41087c0ebd8cd7dccef16c4e0cef2e120f53099c4cdebcf331149508d932fdab"},
+    {file = "bt_decode-0.8.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:328c349841b3ad4e53e85e9a5511ab30bd69a5b2be4b8ba3cda4014c9cb61653"},
+    {file = "bt_decode-0.8.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:54608f1fd679e81dc4954bc09ba8fb59622506742aac7e5d8c6b9bb20b5f587d"},
+    {file = "bt_decode-0.8.0-cp311-cp311-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:0005097e07a33a314e928bce9718eeb3e0fc002f3028d3eeac0144ed0665e333"},
+    {file = "bt_decode-0.8.0-cp311-cp311-win32.whl", hash = "sha256:f792dcab55baf387c5321dd78b67f749a27024a952c2d67f0005586d1d4b0253"},
+    {file = "bt_decode-0.8.0-cp311-cp311-win_amd64.whl", hash = "sha256:45fccf7f2330f7652a742ffb13154bd769580f3e7702958a6c179ae61cf97baa"},
+    {file = "bt_decode-0.8.0.tar.gz", hash = "sha256:deb6b798bea703c9b9e40267f6cddcfb45f7f4c884bbb3d2280143b18095eb09"},
 ]
 
 [[package]]
@@ -535,29 +556,29 @@ files = [
 
 [[package]]
 name = "codespell"
-version = "2.4.2"
+version = "2.4.3"
 requires_python = ">=3.9"
 summary = "Fix common misspellings in text files"
 groups = ["lint"]
 files = [
-    {file = "codespell-2.4.2-py3-none-any.whl", hash = "sha256:97e0c1060cf46bd1d5db89a936c98db8c2b804e1fdd4b5c645e82a1ec6b1f886"},
-    {file = "codespell-2.4.2.tar.gz", hash = "sha256:3c33be9ae34543807f088aeb4832dfad8cb2dae38da61cac0a7045dd376cfdf3"},
+    {file = "codespell-2.4.3-py3-none-any.whl", hash = "sha256:af2505b335e8573dbd2d384d1c4ef498f4006f4ba2d6fceca01e55b91f52628a"},
+    {file = "codespell-2.4.3.tar.gz", hash = "sha256:cbe085e331227b37bb86ef8bddd08dc768c704ee9a07ca869852c093fa2793e2"},
 ]
 
 [[package]]
 name = "codespell"
-version = "2.4.2"
+version = "2.4.3"
 extras = ["toml"]
 requires_python = ">=3.9"
 summary = "Fix common misspellings in text files"
 groups = ["lint"]
 dependencies = [
-    "codespell==2.4.2",
+    "codespell==2.4.3",
     "tomli; python_version < \"3.11\"",
 ]
 files = [
-    {file = "codespell-2.4.2-py3-none-any.whl", hash = "sha256:97e0c1060cf46bd1d5db89a936c98db8c2b804e1fdd4b5c645e82a1ec6b1f886"},
-    {file = "codespell-2.4.2.tar.gz", hash = "sha256:3c33be9ae34543807f088aeb4832dfad8cb2dae38da61cac0a7045dd376cfdf3"},
+    {file = "codespell-2.4.3-py3-none-any.whl", hash = "sha256:af2505b335e8573dbd2d384d1c4ef498f4006f4ba2d6fceca01e55b91f52628a"},
+    {file = "codespell-2.4.3.tar.gz", hash = "sha256:cbe085e331227b37bb86ef8bddd08dc768c704ee9a07ca869852c093fa2793e2"},
 ]
 
 [[package]]
@@ -660,25 +681,6 @@ files = [
     {file = "cryptography-49.0.0-pp311-pypy311_pp73-manylinux_2_34_x86_64.whl", hash = "sha256:084ef1af862eb07ec46d25f68689f2102a9fc0e05ce7b80f14f5fe51e4eef0f6"},
     {file = "cryptography-49.0.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:be9fcb48a55f023493482827d4f459bd263cc20efde64f204b97c123201850c6"},
     {file = "cryptography-49.0.0.tar.gz", hash = "sha256:f89660a348f4f78a92366240a61404e337586ef7f5909a2fef59ca88ef505493"},
-]
-
-[[package]]
-name = "cyscale"
-version = "0.5.0"
-requires_python = ">=3.10"
-summary = "Cython SCALE Codec Library"
-groups = ["default"]
-files = [
-    {file = "cyscale-0.5.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:51248280c8c680ea1f0e80a28134dabf1b4c9ce8ff3955cfa0b1389fbc3b5044"},
-    {file = "cyscale-0.5.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:56caff7b7b1732ee5999343d19aa943ab7969835b18601786daeffc3ac7f1e01"},
-    {file = "cyscale-0.5.0-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:5daa1699ddd2f1d064d74e4b14fd038cdd8cd2d64e6e28f62d1294b1384850e4"},
-    {file = "cyscale-0.5.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:43123dc24c445757e76d2bf3479391adde4151b121274e05844817f34b194b9b"},
-    {file = "cyscale-0.5.0-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:49eddaef49d152a3b4e709037922364243c261013c74a7c53a5d904e44124269"},
-    {file = "cyscale-0.5.0-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:9e4e891d57e4ea55cec765517d90ce9fd1eb79b12fd586d2fe4eb3b428c0c21b"},
-    {file = "cyscale-0.5.0-cp311-cp311-win32.whl", hash = "sha256:037647f7215feaed933acd43da5fd462f35b6a5ffd154e73c73414f0e2af32b2"},
-    {file = "cyscale-0.5.0-cp311-cp311-win_amd64.whl", hash = "sha256:359d165fc5039c15ac3196d3b762159e0293eda4d71cfaa24dfb4ae6711bf3ab"},
-    {file = "cyscale-0.5.0-cp311-cp311-win_arm64.whl", hash = "sha256:38a0e86344903fb41929ec7c52e461d095a0d123e5de5e3cc6d6bcf21ee83d4c"},
-    {file = "cyscale-0.5.0.tar.gz", hash = "sha256:57bf8fb401c71d5d8c7dbadd948c1fbb239b014ad58eb2f43722beb39ebc50e9"},
 ]
 
 [[package]]
@@ -934,7 +936,7 @@ files = [
 
 [[package]]
 name = "django-stubs"
-version = "6.0.6"
+version = "6.0.7"
 requires_python = ">=3.10"
 summary = "Mypy stubs for Django"
 groups = ["type-check"]
@@ -946,13 +948,13 @@ dependencies = [
     "typing-extensions>=4.11.0",
 ]
 files = [
-    {file = "django_stubs-6.0.6-py3-none-any.whl", hash = "sha256:c488fea05a9eac40ddbdc69887f63a5c0922cb13df285291ee99c9bbc89bc4f1"},
-    {file = "django_stubs-6.0.6.tar.gz", hash = "sha256:dfc01e052e33c7f8f0c30c3ff8eda0903ee29ac710d1e46d9effd773744a69b0"},
+    {file = "django_stubs-6.0.7-py3-none-any.whl", hash = "sha256:7ed9a14c438e589272ca04e966dee82a4d1ff7ca5c2171bc986c50a0d03ec35b"},
+    {file = "django_stubs-6.0.7.tar.gz", hash = "sha256:bc55431c0af745a64e39cf33a8d36c87dccbedeae2fe26fab47dd355270e8538"},
 ]
 
 [[package]]
 name = "django-stubs-ext"
-version = "6.0.6"
+version = "6.0.7"
 requires_python = ">=3.10"
 summary = "Monkey-patching and extensions for django-stubs"
 groups = ["type-check"]
@@ -961,24 +963,24 @@ dependencies = [
     "typing-extensions",
 ]
 files = [
-    {file = "django_stubs_ext-6.0.6-py3-none-any.whl", hash = "sha256:5470c970f61a3ccf5aae7633feef1a097f944f417b955da200c9ac26ecd9134b"},
-    {file = "django_stubs_ext-6.0.6.tar.gz", hash = "sha256:e6f09884e48d7c5b250a373dfa22aa3e83bb91b8babbd8d05187f6b92247f232"},
+    {file = "django_stubs_ext-6.0.7-py3-none-any.whl", hash = "sha256:53a9c7c5a7c7e718cc6308cfce1e7470f2cac0b9d38dbcd60fbfa82704f1d592"},
+    {file = "django_stubs_ext-6.0.7.tar.gz", hash = "sha256:c3172c5126614fd2a44d0196b313b44c21f717cb09477ba52b447d41f4ce613e"},
 ]
 
 [[package]]
 name = "django-stubs"
-version = "6.0.6"
+version = "6.0.7"
 extras = ["compatible-mypy"]
 requires_python = ">=3.10"
 summary = "Mypy stubs for Django"
 groups = ["type-check"]
 dependencies = [
-    "django-stubs==6.0.6",
-    "mypy<2.2,>=1.13",
+    "django-stubs==6.0.7",
+    "mypy<2.4,>=1.13",
 ]
 files = [
-    {file = "django_stubs-6.0.6-py3-none-any.whl", hash = "sha256:c488fea05a9eac40ddbdc69887f63a5c0922cb13df285291ee99c9bbc89bc4f1"},
-    {file = "django_stubs-6.0.6.tar.gz", hash = "sha256:dfc01e052e33c7f8f0c30c3ff8eda0903ee29ac710d1e46d9effd773744a69b0"},
+    {file = "django_stubs-6.0.7-py3-none-any.whl", hash = "sha256:7ed9a14c438e589272ca04e966dee82a4d1ff7ca5c2171bc986c50a0d03ec35b"},
+    {file = "django_stubs-6.0.7.tar.gz", hash = "sha256:bc55431c0af745a64e39cf33a8d36c87dccbedeae2fe26fab47dd355270e8538"},
 ]
 
 [[package]]
@@ -1070,13 +1072,13 @@ files = [
 
 [[package]]
 name = "filelock"
-version = "3.29.7"
+version = "3.30.0"
 requires_python = ">=3.10"
 summary = "A platform independent file lock."
 groups = ["default"]
 files = [
-    {file = "filelock-3.29.7-py3-none-any.whl", hash = "sha256:987db6f789a3a2a59f55081801b2b3697cb97e2a736b5f1a9e99b559285fbc51"},
-    {file = "filelock-3.29.7.tar.gz", hash = "sha256:5b481979797ae69e72f0b389d89a80bdd585c260c5b3f1fb9c0a5ba9bb3f195d"},
+    {file = "filelock-3.30.0-py3-none-any.whl", hash = "sha256:40632998f0772e64183bb819f086a1b9def6be1090cf1dcb9d45f46806ef279b"},
+    {file = "filelock-3.30.0.tar.gz", hash = "sha256:1774e682dbe443bd60f9609162fc596e2c80dc84ffc2957068953406d0520090"},
 ]
 
 [[package]]
@@ -2202,7 +2204,7 @@ files = [
 
 [[package]]
 name = "sentry-sdk"
-version = "2.64.0"
+version = "2.65.0"
 requires_python = ">=3.6"
 summary = "Python client for Sentry (https://sentry.io)"
 groups = ["default"]
@@ -2211,8 +2213,8 @@ dependencies = [
     "urllib3>=1.26.11",
 ]
 files = [
-    {file = "sentry_sdk-2.64.0-py3-none-any.whl", hash = "sha256:715ea91ca860a819e8d8a50a7bde3a80d0df3b4ed7b6660a20fb9a2d084188f1"},
-    {file = "sentry_sdk-2.64.0.tar.gz", hash = "sha256:68be2c29e14ae310f8a39e1a79916b6d85c6cb41dcce789d14ff05fe293e4c55"},
+    {file = "sentry_sdk-2.65.0-py3-none-any.whl", hash = "sha256:3595169677a808e4d0e1ea6ffb89443459549c7a98392ed71c77c847182ab6bf"},
+    {file = "sentry_sdk-2.65.0.tar.gz", hash = "sha256:c94dc945d54bad49d4f20448b1e6b217ca2f92f46d05c3e83d41764af685c3d1"},
 ]
 
 [[package]]
@@ -2304,6 +2306,17 @@ files = [
 ]
 
 [[package]]
+name = "toml"
+version = "0.10.2"
+requires_python = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
+summary = "Python Library for Tom's Obvious, Minimal Language"
+groups = ["default"]
+files = [
+    {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
+    {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
+]
+
+[[package]]
 name = "tornado"
 version = "6.5.7"
 requires_python = ">=3.9"
@@ -2345,13 +2358,13 @@ files = [
 
 [[package]]
 name = "types-python-dateutil"
-version = "2.9.0.20260518"
+version = "2.9.0.20260716"
 requires_python = ">=3.10"
 summary = "Typing stubs for python-dateutil"
 groups = ["type-check"]
 files = [
-    {file = "types_python_dateutil-2.9.0.20260518-py3-none-any.whl", hash = "sha256:d6a9c5bd0de61460c8fdef8ab2b400f956a1a1075cce08d4e2b4434e478c50b8"},
-    {file = "types_python_dateutil-2.9.0.20260518.tar.gz", hash = "sha256:51f02dc03b61c7f6a07df45797d4dfe8a1aa47f0b7db9ad89f6fd3a1a70e1b51"},
+    {file = "types_python_dateutil-2.9.0.20260716-py3-none-any.whl", hash = "sha256:1ae41d51a5c5f6bbeeb7f1f34df7086d55ff1605cf88d2ed71a7a276e1a7794e"},
+    {file = "types_python_dateutil-2.9.0.20260716.tar.gz", hash = "sha256:1d55d1c3024bdb4861bb6a6622c9ec800c433d87bdc5b16fb84cdd0eed4ef2cb"},
 ]
 
 [[package]]
@@ -2367,7 +2380,7 @@ files = [
 
 [[package]]
 name = "types-requests"
-version = "2.33.0.20260518"
+version = "2.33.0.20260712"
 requires_python = ">=3.10"
 summary = "Typing stubs for requests"
 groups = ["type-check"]
@@ -2375,8 +2388,8 @@ dependencies = [
     "urllib3>=2",
 ]
 files = [
-    {file = "types_requests-2.33.0.20260518-py3-none-any.whl", hash = "sha256:626d697d1adaaff76e2044dc8c5c051d8f21abc157bdfe204a75558076fe0bf0"},
-    {file = "types_requests-2.33.0.20260518.tar.gz", hash = "sha256:df7bd3bfe0ca8402dfb841e7d9be714bb5578203283d66d7dc4ef69343449a5e"},
+    {file = "types_requests-2.33.0.20260712-py3-none-any.whl", hash = "sha256:de027e28c171d3da529689cbfa023b0b4eab188c8dfa22fd834eebd2cee6e7bb"},
+    {file = "types_requests-2.33.0.20260712.tar.gz", hash = "sha256:2141b67ab534a5c5cd2dac5034f2a35f42e699c5bf185eee608c5246a069d7fb"},
 ]
 
 [[package]]
@@ -2469,7 +2482,7 @@ files = [
 
 [[package]]
 name = "virtualenv"
-version = "21.6.0"
+version = "21.6.1"
 requires_python = ">=3.9"
 summary = "Virtual Python Environment builder"
 groups = ["default"]
@@ -2482,8 +2495,8 @@ dependencies = [
     "typing-extensions>=4.13.2; python_version < \"3.11\"",
 ]
 files = [
-    {file = "virtualenv-21.6.0-py3-none-any.whl", hash = "sha256:bce9d097950fef9d81129b333babfb7767072850c2f1acce0ec536708401bfd1"},
-    {file = "virtualenv-21.6.0.tar.gz", hash = "sha256:e18a4d750f2b64dea73e72ffde3922f3c52365fabdc8157ebd3da20d031c4734"},
+    {file = "virtualenv-21.6.1-py3-none-any.whl", hash = "sha256:afe991df855715a2b2f60edfcc0107ef95a79fdfd8cb4cdaa71603d1c12e463b"},
+    {file = "virtualenv-21.6.1.tar.gz", hash = "sha256:15f978b7cd329f24855ff4a0c4b4899cc7678589f49adbdcbbb4d3232e641128"},
 ]
 
 [[package]]
