@@ -6,26 +6,32 @@ LABEL builder=true
 
 WORKDIR /root/src/
 
-#RUN pip3 install --no-cache-dir 'pdm>=2.12,<3'
+RUN pip3 install --no-cache-dir 'pdm>=2.12,<3'
 
-#COPY pyproject.toml pdm.lock ./
-COPY pyproject.toml ./
-#RUN pdm lock --check
+COPY pyproject.toml pdm.lock ./
+RUN pdm lock --check
 
 RUN apt-get update && apt-get install -y git
 
+RUN pdm config python.use_venv false \
+    && pdm export \
+      --prod \
+      --format requirements \
+      --without-hashes \
+      --output /tmp/requirements.txt \
+    && rm -rf .venv __pypackages__ \
+    && python3 -m venv /opt/runtime \
+    && /opt/runtime/bin/pip3 install \
+      --no-cache-dir \
+      --requirement /tmp/requirements.txt
 
-#RUN pdm config python.use_venv False && pdm sync --prod --group :all
-RUN pip3 install tomlkit
-RUN python -c "import tomlkit, pathlib, subprocess; subprocess.check_call(['pip', 'install', '--user', '--no-cache-dir', *tomlkit.loads(pathlib.Path('pyproject.toml').read_text())['project']['dependencies']])"
-
-#RUN mkdir -p /opt/ && mv __pypackages__/3.11/ /opt/pypackages/
-ENV PATH=/opt/pypackages/bin:$PATH
-ENV PYTHONPATH=/opt/pypackages/lib:$PYTHONPATH
+ENV PATH=/opt/runtime/bin:$PATH
 
 COPY ./app/src/ ./app/envs/prod/entrypoint.sh ./app/envs/prod/gunicorn.conf.py ./app/envs/prod/celery-entrypoint.sh ./app/envs/prod/prometheus-cleanup.sh /root/src/
 
 RUN python3 -m compileall -b -f -q /root/
+RUN python3 -m pip check
+RUN python3 -c "import async_substrate_interface; import bittensor"
 RUN CENTRAL_PROMETHEUS_PROXY_URL=localhost BITTENSOR_NETUID=1 BITTENSOR_WALLET_NAME=a BITTENSOR_WALLET_HOTKEY_NAME=b ENV=prod ENV_FILL_MISSING_VALUES=1 SECRET_KEY=dummy python3 manage.py collectstatic --no-input --clear
 
 
@@ -38,11 +44,10 @@ RUN apt-get update \
 
 WORKDIR /root/src/
 ENV PYTHONUNBUFFERED=1
-ENV PATH=/opt/pypackages/bin:$PATH
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONPATH=/opt/pypackages/lib:$PYTHONPATH
+ENV PATH=/opt/runtime/bin:$PATH
 
-COPY --from=base-image /root/ /root/
+COPY --from=base-image /opt/runtime/ /opt/runtime/
+COPY --from=base-image /root/src/ /root/src/
 
 
 
