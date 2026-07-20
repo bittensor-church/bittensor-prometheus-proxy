@@ -11,6 +11,7 @@ urlpatterns = [
     path("business-metrics", metrics_manager.view, name="prometheus-business-metrics"),
     path("healthcheck/", include("health_check.urls")),
     path("prometheus/", include("project.core.views.prometheus")),
+    path("sentry/", include("project.core.views.sentry")),
     path("traces/", include("project.core.views.traces")),
     path("", include("django.contrib.auth.urls")),
 ]

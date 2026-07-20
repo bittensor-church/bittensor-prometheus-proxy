@@ -1,6 +1,8 @@
 import gzip
+import io
 
 import requests
+from django.conf import settings
 from django.http import HttpResponse
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -34,13 +36,30 @@ BODY_ENCODING_HEADERS = frozenset({"content-encoding", "content-length"})
 # recalculates Content-Length from the actual content passed to HttpResponse.
 HEADERS_TO_STRIP = HOP_BY_HOP_HEADERS | BODY_ENCODING_HEADERS
 
+MAX_DECOMPRESSED_BODY_SIZE = 3 * settings.DATA_UPLOAD_MAX_MEMORY_SIZE
+
+
+class BodyTooLargeError(ValueError): ...
+
+
+def _gzip_decompress_limited(data: bytes, max_size: int) -> bytes:
+    with gzip.GzipFile(fileobj=io.BytesIO(data)) as gzip_file:
+        chunks: list[bytes] = []
+        total = 0
+        while chunk := gzip_file.read(64 * 1024):
+            total += len(chunk)
+            if total > max_size:
+                raise BodyTooLargeError
+            chunks.append(chunk)
+        return b"".join(chunks)
+
 
 def decompress_body(data: bytes, headers) -> bytes:
     encoding = headers.get("Content-Encoding", "")
     if not encoding:
         return data
     if any(e.strip().lower() in ("gzip", "x-gzip") for e in encoding.split(",")):
-        return gzip.decompress(data)
+        return _gzip_decompress_limited(data, MAX_DECOMPRESSED_BODY_SIZE)
     raise ValueError(f"Unsupported Content-Encoding: {encoding}")
 
 

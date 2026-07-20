@@ -247,8 +247,11 @@ if REDIS_HOST:
     }
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
+CONSTANCE_ADDITIONAL_FIELDS = {
+    dict: ["django.forms.fields.JSONField", {"widget": "django.forms.Textarea"}],
+}
 CONSTANCE_CONFIG = {
-    # "PARAMETER": (default-value, "Help text", type),
+    "UPSTREAM_SENTRY_DSNS": ({}, "netuid (int) -> upstream Sentry DSN (str)", dict),
 }
 
 
@@ -348,12 +351,24 @@ LOGGING = {
 
 CENTRAL_PROMETHEUS_PROXY_URL = env.str("CENTRAL_PROMETHEUS_PROXY_URL", default="")
 UPSTREAM_PROMETHEUS_URL = env.str("UPSTREAM_PROMETHEUS_URL", default="")
+CENTRAL_SENTRY_PROXY_URL = env.str("CENTRAL_SENTRY_PROXY_URL", default="")
 CENTRAL_TEMPO_PROXY_URL = env.str("CENTRAL_TEMPO_PROXY_URL", default="")
 UPSTREAM_TEMPO_URL = env.str("UPSTREAM_TEMPO_URL", default="")
-if not any([UPSTREAM_PROMETHEUS_URL, CENTRAL_PROMETHEUS_PROXY_URL, UPSTREAM_TEMPO_URL, CENTRAL_TEMPO_PROXY_URL]):
+if not any(
+    [
+        UPSTREAM_PROMETHEUS_URL,
+        CENTRAL_PROMETHEUS_PROXY_URL,
+        CENTRAL_SENTRY_PROXY_URL,
+        UPSTREAM_TEMPO_URL,
+        CENTRAL_TEMPO_PROXY_URL,
+    ]
+):
     raise RuntimeError(
-        "At least one of UPSTREAM_PROMETHEUS_URL, CENTRAL_PROMETHEUS_PROXY_URL, "
-        "UPSTREAM_TEMPO_URL, or CENTRAL_TEMPO_PROXY_URL must be set"
+        "At least one of "
+        "UPSTREAM_PROMETHEUS_URL, CENTRAL_PROMETHEUS_PROXY_URL, "
+        "CENTRAL_SENTRY_PROXY_URL, "
+        "UPSTREAM_TEMPO_URL, CENTRAL_TEMPO_PROXY_URL "
+        "must be set"
     )
 
 # Central proxy: list of supported netuids, e.g. "12,22" -> [12, 22]
@@ -384,7 +399,7 @@ BITTENSOR_WALLET_DIRECTORY = env.path(
 BITTENSOR_WALLET_NAME = env.str("BITTENSOR_WALLET_NAME", default=None)
 BITTENSOR_WALLET_HOTKEY_NAME = env.str("BITTENSOR_WALLET_HOTKEY_NAME", default=None)
 
-if CENTRAL_PROMETHEUS_PROXY_URL or CENTRAL_TEMPO_PROXY_URL:
+if CENTRAL_PROMETHEUS_PROXY_URL or CENTRAL_TEMPO_PROXY_URL or CENTRAL_SENTRY_PROXY_URL:
     if BITTENSOR_NETUID is None:
         raise RuntimeError("BITTENSOR_NETUID must be set when any CENTRAL_*_PROXY_URL is defined")
     if BITTENSOR_WALLET_NAME is None or BITTENSOR_WALLET_HOTKEY_NAME is None:

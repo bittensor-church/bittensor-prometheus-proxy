@@ -6,6 +6,7 @@ import os
 os.environ["UPSTREAM_PROMETHEUS_URL"] = ""
 os.environ["UPSTREAM_TEMPO_URL"] = ""
 os.environ["CENTRAL_TEMPO_PROXY_URL"] = ""
+os.environ["CENTRAL_SENTRY_PROXY_URL"] = ""
 os.environ["DEBUG_TOOLBAR"] = "False"
 os.environ["SECRET_KEY"] = "test-secret-key-not-for-prod"
 # On-site mode for tests
