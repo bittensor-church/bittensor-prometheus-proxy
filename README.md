@@ -1,15 +1,28 @@
 # bittensor-prometheus-proxy
 
-Proxy that allows for 
+A Bittensor-authenticated observability proxy for Prometheus remote-write metrics and OpenTelemetry traces.
 
-1. pushing prometheus metrics signed with bittensor wallets. Operating in this manner does not require a db or redis.
-2. verifying incoming signed metrics. Operating in this manner does not require a wallet. Verification is two-fold:
-   1. the full payload is signed, both the signature and the hotkey are included in the headers - that is verified 
-   2. the metrics data blob is unpacked and each metric is checked for the "hotkey" label - it has to be the same as
-      the value in the header
+The proxy can run in either of two roles:
+
+| Role | Responsibility |
+|---|---|
+| On-site | Uses one validator wallet and one netuid, attaches that identity to telemetry, signs the payload, and sends it to a central proxy. |
+| Central | Supports one or more netuids, checks the signed identity against the active validator set, validates the payload identity, and forwards accepted telemetry to Prometheus or Tempo. |
+
+For metrics, the on-site Prometheus includes the validator hotkey as a label. The central proxy verifies that every
+time series contains the authenticated hotkey. For traces, Grafana Alloy sends OTLP data to the on-site proxy, which
+upserts `hotkey` and `netuid` resource attributes before signing it. The central proxy verifies the authenticated
+hotkey on every OTLP resource before forwarding the request to Tempo.
+
+The central role accepts a comma-separated `BITTENSOR_NETUIDS` allow-list such as `2,12,22`; every on-site deployment
+continues to identify itself with one `BITTENSOR_NETUID`. Validator membership is synchronized independently for each
+configured subnet through Bittensor Pylon.
 
 ![Diagram](./docs/diagram.svg)
-- - -
+
+See [Configuration](./docs/configuration.md) for role-specific environment variables and examples.
+
+---
 
 # Base requirements
 
@@ -22,17 +35,23 @@ Proxy that allows for
 
 ```sh
 ./setup-dev.sh
-docker compose up -d  # this will also start node_Exporter and two prometheus instances
+docker compose up -d
 cd app/src
 pdm run manage.py wait_for_database --timeout 10
 pdm run manage.py migrate
 pdm run manage.py runserver 0.0.0.0:8000
 ```
 
-this setup requires a working bittensor wallet (for the on-site prometheus to read the hotkey and so that the proxy
-can sign requests). Requests will be sent from on-site prometheus to proxy then to the same proxy (different view 
-though) and to the central prometheus. Starting celery and celery beat is not, however, required for local development,
-because instead of having a periodic task populate the validator list, one can add records to it manually using
+The development Compose stack starts PostgreSQL, Redis, Bittensor Pylon, node exporter, on-site and central
+Prometheus, Grafana Alloy, and Tempo. The default configuration uses the local Django process as both the on-site and
+central proxy: metrics and traces enter its outbound endpoints, return through its inbound endpoints, and are then
+written to the local Prometheus and Tempo instances.
+
+This setup requires a working Bittensor wallet so Prometheus can add the hotkey label and the on-site proxy can sign
+requests. Applications can export traces to Alloy over OTLP/gRPC on port `4317` or OTLP/HTTP on port `4318`.
+
+Celery and Celery beat are not required for local development. Instead of periodically synchronizing validators
+through Pylon, manually allow the development wallet for the configured subnet:
 
 ```bash
 python manage.py debug_add_validator <hotkey> --netuid <netuid>

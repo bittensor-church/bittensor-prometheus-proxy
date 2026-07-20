@@ -1,16 +1,37 @@
 @startuml
-participant "On-site Exporters" as E
-participant "On-site Prometheus" as P
+hide footbox
+participant "Metric Exporters" as E
+participant "On-site\nPrometheus" as P
+participant "Trace Producers" as T
+participant "On-site\nAlloy" as A
 participant "On-site Proxy" as OP
 participant "Central Proxy" as CP
-participant "Central DB and Redis" as DB
-participant "Central Prometheus" as CProm
+database "Central DB\nand Redis" as DB
+participant "Bittensor\nPylon" as PY
+participant "Central\nPrometheus" as CProm
+participant "Tempo" as Tempo
 
+== Validator registry ==
+CP -> PY: Fetch validators for each BITTENSOR_NETUIDS entry
+PY --> CP: Validator hotkeys grouped by netuid
+CP -> DB: Store and cache active (hotkey, netuid) pairs
+
+== Prometheus metrics ==
 P -> E: Scrape metrics
-P -> OP: Push metrics data blob, include hotkey as label
-OP -> OP: Sign the blob
-OP -> CP: Push metrics data blob
-CP -> DB: Keep a list of registered validators, cached
-CP -> CP: Verify signature, verify "hotkey" label in each metric
-CP -> CProm: Push metrics data blob
+P -> OP: POST /prometheus/outbound\nremote write with hotkey labels
+OP -> OP: Sign payload and add\nhotkey, netuid, signature headers
+OP -> CP: POST /prometheus/inbound
+CP -> DB: Check active (hotkey, netuid)
+CP -> CP: Verify signature and hotkey labels
+CP -> CProm: POST /api/v1/write
+
+== OpenTelemetry traces ==
+T -> A: Export OTLP\n(gRPC :4317 or HTTP :4318)
+A -> A: Tail sample and batch
+A -> OP: POST /traces/outbound\nOTLP protobuf
+OP -> OP: Upsert hotkey/netuid resource attributes,\nserialize, and sign the modified payload
+OP -> CP: POST /traces/inbound
+CP -> DB: Check active (hotkey, netuid)
+CP -> CP: Verify signature and resource hotkeys
+CP -> Tempo: POST /v1/traces
 @enduml
