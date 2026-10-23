@@ -127,6 +127,16 @@ mkdir letsencrypt
 ./deploy.sh
 ```
 
+### Remove orphaned containers
+
+`docker compose up -d` leaves running the containers of services that were removed or renamed in `docker-compose.yml`.
+Start the stack with `--remove-orphans` to stop and remove them:
+
+```sh
+cd ~/domains/bittensor-prometheus-proxy
+docker compose up -d --remove-orphans
+```
+
 ### Deploy another branch
 
 Only `master` branch is used to redeploy an application.

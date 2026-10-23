@@ -15,7 +15,7 @@ services:
         tag: '{{.Name}}'
 
   db:
-    image: postgres:14.0-alpine
+    image: postgres:14.24-alpine@sha256:50fce0c9c54c43d8b02ce16cb9daff75eb94c09c4ee3d41c157852ebd9700c80
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
     restart: unless-stopped
@@ -109,7 +109,7 @@ services:
       <<: *logging
   
   nginx:
-    image: 'ghcr.io/reef-technologies/nginx-rt:v1.2.2'
+    image: 'ghcr.io/reef-technologies/nginx-rt:v1.4.0'
     restart: unless-stopped
     healthcheck:
       test: [
@@ -168,7 +168,7 @@ services:
       <<: *logging
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.40.0
+    image: ghcr.io/google/cadvisor:v0.60.5@sha256:763aecf1c32c2be8a1a75f9abfc2fc461005c9dbbaa39cb356b354aac1296dbe
     container_name: cadvisor
     devices:
       - /dev/kmsg:/dev/kmsg
@@ -183,7 +183,7 @@ services:
       <<: *logging
 
   alloy:
-    image: grafana/alloy:v1.15.1
+    image: grafana/alloy:v1.21.1@sha256:4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8
     restart: unless-stopped
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy
@@ -200,14 +200,14 @@ services:
 
 
   bittensor-pylon:
-    image: docker.io/backenddevelopersltd/bittensor-pylon:2.2.0
+    image: docker.io/backenddevelopersltd/bittensor-pylon:2.3.4@sha256:2e7a3470b1ff6f4a72f53a075c1f215cd352a0d289387bad10f328825f396dbb
     restart: unless-stopped
     env_file: ./.env
     logging:
       <<: *logging
 
-  promtail:
-    image: grafana/promtail:2.9.2
+  alloy-logs:
+    image: grafana/alloy:v1.21.1@sha256:4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8
     restart: unless-stopped
     environment:
       - LOKI_URL=${LOKI_URL}
@@ -217,14 +217,17 @@ services:
       - LOKI_CLIENT=${LOKI_CLIENT}
       - LOKI_CLIENT_SERVER_GROUP=${LOKI_CLIENT_SERVER_GROUP}
     volumes:
-      - ./promtail:/etc/promtail
+      - ./alloy/logs.alloy:/etc/alloy/logs.alloy
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-logs-data:/var/lib/alloy
     command:
-      - -config.file=/etc/promtail/config.yml
-      - -config.expand-env=true
+      - run
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/logs.alloy
     logging:
       <<: *logging
 
 
 volumes:
   backend-static:
+  alloy-logs-data:

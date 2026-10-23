@@ -14,8 +14,11 @@ echo "Building Backend: ${IMAGE_NAME}"
 
 ./setup-prod.sh
 
+# A cached apt layer would keep the ca-certificates of an earlier build.
 DOCKER_BUILDKIT=1 docker build \
   -f app/Dockerfile \
+  --pull \
+  --no-cache \
   --progress plain \
   --platform linux/amd64 \
   -t "${IMAGE_NAME}" \

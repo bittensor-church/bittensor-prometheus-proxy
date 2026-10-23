@@ -12,7 +12,7 @@ services:
       - ${REDIS_PORT}:6379
 
   db:
-    image: postgres:14.0-alpine
+    image: postgres:14.24-alpine@sha256:50fce0c9c54c43d8b02ce16cb9daff75eb94c09c4ee3d41c157852ebd9700c80
     healthcheck:
       test: pg_isready -U ${POSTGRES_USER} || exit 1
     environment:
@@ -25,7 +25,7 @@ services:
       - ${POSTGRES_PORT}:5432
 
   bittensor-pylon:
-    image: docker.io/backenddevelopersltd/bittensor-pylon:2.2.0
+    image: docker.io/backenddevelopersltd/bittensor-pylon:2.3.4@sha256:2e7a3470b1ff6f4a72f53a075c1f215cd352a0d289387bad10f328825f396dbb
     restart: unless-stopped
     environment:
       - PYLON_OPEN_ACCESS_TOKEN=${PYLON_OPEN_ACCESS_TOKEN}
@@ -33,7 +33,7 @@ services:
       - ${PYLON_PORT}:8000
 
   central-prometheus:
-    image: prom/prometheus:v2.46.0
+    image: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --log.level=debug
@@ -89,7 +89,7 @@ services:
       start_period: 10s
 
   alloy:
-    image: grafana/alloy:v1.15.1
+    image: grafana/alloy:v1.21.1@sha256:4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy
     ports:

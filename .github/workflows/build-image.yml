@@ -44,5 +44,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # A cached apt layer would keep the ca-certificates of an earlier build.
+          pull: true
+          no-cache: true
