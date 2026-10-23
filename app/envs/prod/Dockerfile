@@ -11,7 +11,7 @@ ARG PIP_REQUIREMENT
 WORKDIR /root/src/
 
 RUN python3 -m pip install --no-cache-dir "$PIP_REQUIREMENT"
-RUN pip3 install --no-cache-dir 'pdm>=2.12,<3'
+RUN pip3 install --no-cache-dir pdm==2.29.2
 
 COPY pyproject.toml pdm.lock ./
 RUN pdm lock --check
