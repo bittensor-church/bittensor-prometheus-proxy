@@ -12,6 +12,7 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y ca-certificates wget curl && \
     wget https://github.com/prometheus/prometheus/releases/download/v2.55.0/prometheus-2.55.0.linux-amd64.tar.gz && \
+    echo "7a6b6d5ea003e8d59def294392c64e28338da627bf760cf268e788d6a8832a23  prometheus-2.55.0.linux-amd64.tar.gz" | sha256sum -c - && \
     tar xvzf prometheus-*.tar.gz && \
     mkdir /etc/prometheus && \
     mv prometheus-2.55.0.linux-amd64/prometheus /bin/ && \
