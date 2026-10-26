@@ -27,7 +27,7 @@ RUN chown nobody: /etc/prometheus
 COPY read_wallet_and_substitute_config.py /app/
 RUN chown -R nobody: /app/
 
-COPY entrypoint.sh /
+COPY --chmod=755 entrypoint.sh /
 RUN chown nobody: /entrypoint.sh
 
 RUN mkdir /nonexistent
