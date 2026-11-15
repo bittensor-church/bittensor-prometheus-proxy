@@ -41,6 +41,21 @@ build-backend = "pdm.backend"
 [tool.pdm]
 distribution = false
 
+[tool.uv]
+# bittensor 9.x depends on scalecodec. async-substrate-interface 2.x
+# replaces that package with cyscale and raises on import if both exist.
+constraint-dependencies = ["async-substrate-interface<2"]
+
+[tool.pytest.ini_options]
+pythonpath = ["app/src"]
+testpaths = ["app/src/project"]
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+DJANGO_SETTINGS_MODULE = "project.core.tests.settings"
+norecursedirs = [".*", "build", "dist", "CVS", "_darcs", "{arch}", "*.egg", "venv", "node_modules", "db"]
+markers = [
+    "integration: requires external services (Tempo); run with nox -s test_integration",
+]
+
 [tool.pdm.dev-dependencies]
 test = [
     'pytest',
