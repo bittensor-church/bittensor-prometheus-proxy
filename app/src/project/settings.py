@@ -351,6 +351,7 @@ UPSTREAM_PROMETHEUS_URL = env.str("UPSTREAM_PROMETHEUS_URL", default="")
 CENTRAL_TEMPO_PROXY_URL = env.str("CENTRAL_TEMPO_PROXY_URL", default="")
 UPSTREAM_TEMPO_URL = env.str("UPSTREAM_TEMPO_URL", default="")
 CENTRAL_SENTRY_PROXY_URL = env.str("CENTRAL_SENTRY_PROXY_URL", default="")
+UPSTREAM_SENTRY_DSNS: dict[int, str] = {int(netuid): dsn for netuid, dsn in env.json("UPSTREAM_SENTRY_DSNS", default={}).items()}
 if not any(
     [
         UPSTREAM_PROMETHEUS_URL,
@@ -358,11 +359,13 @@ if not any(
         UPSTREAM_TEMPO_URL,
         CENTRAL_TEMPO_PROXY_URL,
         CENTRAL_SENTRY_PROXY_URL,
+        UPSTREAM_SENTRY_DSNS,
     ]
 ):
     raise RuntimeError(
         "At least one of UPSTREAM_PROMETHEUS_URL, CENTRAL_PROMETHEUS_PROXY_URL, "
-        "UPSTREAM_TEMPO_URL, CENTRAL_TEMPO_PROXY_URL, or CENTRAL_SENTRY_PROXY_URL must be set"
+        "UPSTREAM_TEMPO_URL, CENTRAL_TEMPO_PROXY_URL, CENTRAL_SENTRY_PROXY_URL, "
+        "or UPSTREAM_SENTRY_DSNS must be set"
     )
 
 # Central proxy: list of supported netuids, e.g. "12,22" -> [12, 22]
@@ -372,15 +375,15 @@ BITTENSOR_NETUIDS: list[int] = [int(n) for n in _netuids_raw]
 PYLON_ENDPOINT = env.str("PYLON_ENDPOINT", default="")
 PYLON_OPEN_ACCESS_TOKEN = env.str("PYLON_OPEN_ACCESS_TOKEN", default="")
 
-if UPSTREAM_PROMETHEUS_URL or UPSTREAM_TEMPO_URL:
+if UPSTREAM_PROMETHEUS_URL or UPSTREAM_TEMPO_URL or UPSTREAM_SENTRY_DSNS:
     if not BITTENSOR_NETUIDS:
-        raise RuntimeError("BITTENSOR_NETUIDS must be set when any UPSTREAM_*_URL is defined")
+        raise RuntimeError("BITTENSOR_NETUIDS must be set when a central upstream is configured")
     if not PYLON_ENDPOINT:
-        raise RuntimeError("PYLON_ENDPOINT must be set when any UPSTREAM_*_URL is defined")
+        raise RuntimeError("PYLON_ENDPOINT must be set when a central upstream is configured")
     if not DATABASES:
-        raise RuntimeError("Either DATABASE_POOL_URL or DATABASE_URL must be set when any UPSTREAM_*_URL is defined")
+        raise RuntimeError("Either DATABASE_POOL_URL or DATABASE_URL must be set when a central upstream is configured")
     if not REDIS_HOST:
-        raise RuntimeError("REDIS_HOST must be set when any UPSTREAM_*_URL is defined")
+        raise RuntimeError("REDIS_HOST must be set when a central upstream is configured")
 
 # On-site proxy: single netuid this node belongs to
 BITTENSOR_NETUID = env.int("BITTENSOR_NETUID", default=None)
