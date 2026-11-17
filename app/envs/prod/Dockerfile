@@ -12,7 +12,7 @@ ARG PINNED_PIP_REQUIREMENT
 WORKDIR /root/src/
 
 RUN python3 -m pip install --no-cache-dir "$PINNED_PIP_REQUIREMENT"
-RUN pip3 install --no-cache-dir pdm==2.29.2
+RUN pip3 install --no-cache-dir pdm==2.29.7
 
 COPY pyproject.toml pdm.lock ./
 RUN pdm lock --check
