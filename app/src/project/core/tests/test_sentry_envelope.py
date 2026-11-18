@@ -74,7 +74,9 @@ def test_parse_implicit_length_and_empty_items():
     assert header == {}
     assert items == [({"type": "attachment"}, b"helloworld")]
 
-    header, items = parse_envelope(b'{"event_id":"abc"}\n{"type":"attachment","length":0}\n\n{"type":"attachment","length":0}\n')
+    header, items = parse_envelope(
+        b'{"event_id":"abc"}\n{"type":"attachment","length":0}\n\n{"type":"attachment","length":0}\n'
+    )
     assert [item[1] for item in items] == [b"", b""]
 
 

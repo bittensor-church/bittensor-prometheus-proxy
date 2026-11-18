@@ -351,7 +351,9 @@ UPSTREAM_PROMETHEUS_URL = env.str("UPSTREAM_PROMETHEUS_URL", default="")
 CENTRAL_TEMPO_PROXY_URL = env.str("CENTRAL_TEMPO_PROXY_URL", default="")
 UPSTREAM_TEMPO_URL = env.str("UPSTREAM_TEMPO_URL", default="")
 CENTRAL_SENTRY_PROXY_URL = env.str("CENTRAL_SENTRY_PROXY_URL", default="")
-UPSTREAM_SENTRY_DSNS: dict[int, str] = {int(netuid): dsn for netuid, dsn in env.json("UPSTREAM_SENTRY_DSNS", default={}).items()}
+UPSTREAM_SENTRY_DSNS: dict[int, str] = {
+    int(netuid): dsn for netuid, dsn in env.json("UPSTREAM_SENTRY_DSNS", default={}).items()
+}
 if not any(
     [
         UPSTREAM_PROMETHEUS_URL,

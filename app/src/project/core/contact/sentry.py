@@ -26,8 +26,7 @@ class SentryContact(AbstractSentryContact):
             headers={
                 "Content-Type": "application/x-sentry-envelope",
                 "X-Sentry-Auth": (
-                    "Sentry sentry_version=7, sentry_client=bittensor-prometheus-proxy/0, "
-                    f"sentry_key={public_key}"
+                    f"Sentry sentry_version=7, sentry_client=bittensor-prometheus-proxy/0, sentry_key={public_key}"
                 ),
             },
             timeout=TIMEOUT,
