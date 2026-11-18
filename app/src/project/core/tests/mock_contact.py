@@ -1,7 +1,9 @@
 from collections import defaultdict
 from typing import Any
 
-from project.core.contact import AbstractSubtensorContact
+import requests
+
+from project.core.contact import AbstractSentryContact, AbstractSubtensorContact
 
 
 class Behave:
@@ -78,3 +80,22 @@ class MockSubtensorContact(AbstractSubtensorContact):
     def get_validator_hotkeys(self, netuid: int) -> list[str]:
         self._behave.track("get_validator_hotkeys", netuid)
         return self._behave.execute("get_validator_hotkeys", netuid)
+
+
+class MockSentryContact(AbstractSentryContact):
+    def __init__(self) -> None:
+        self._behave = Behave()
+
+    @property
+    def calls(self) -> dict[str, list]:
+        return self._behave.calls
+
+    def add_behavior(self, method_name: str, behavior: Any) -> None:
+        self._behave.add_behavior(method_name, behavior)
+
+    def reset(self) -> None:
+        self._behave.reset()
+
+    def ingest_envelope(self, dsn: str, envelope: bytes) -> requests.Response:
+        self._behave.track("ingest_envelope", dsn, envelope)
+        return self._behave.execute("ingest_envelope", dsn, envelope)

@@ -12,6 +12,7 @@ urlpatterns = [
     path("healthcheck/", include("health_check.urls")),
     path("prometheus/", include("project.core.views.prometheus")),
     path("traces/", include("project.core.views.traces")),
+    path("", include("project.core.views.sentry")),
     path("", include("django.contrib.auth.urls")),
 ]
 

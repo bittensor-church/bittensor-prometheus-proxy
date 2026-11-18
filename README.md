@@ -1,18 +1,20 @@
 # bittensor-prometheus-proxy
 
-A Bittensor-authenticated observability proxy for Prometheus remote-write metrics and OpenTelemetry traces.
+A Bittensor-authenticated observability proxy for Prometheus remote-write metrics, OpenTelemetry traces, and Sentry error events.
 
 The proxy can run in either of two roles:
 
 | Role | Responsibility |
 |---|---|
 | On-site | Uses one validator wallet and one netuid, attaches that identity to telemetry, signs the payload, and sends it to a central proxy. |
-| Central | Supports one or more netuids, checks the signed identity against the active validator set, validates the payload identity, and forwards accepted telemetry to Prometheus or Tempo. |
+| Central | Supports one or more netuids, checks the signed identity against the active validator set, validates the payload identity, and forwards accepted telemetry to Prometheus, Tempo, or Sentry. |
 
 For metrics, the on-site Prometheus includes the validator hotkey as a label. The central proxy verifies that every
 time series contains the authenticated hotkey. For traces, Grafana Alloy sends OTLP data to the on-site proxy, which
 upserts `hotkey` and `netuid` resource attributes before signing it. The central proxy verifies the authenticated
-hotkey on every OTLP resource before forwarding the request to Tempo.
+hotkey on every OTLP resource before forwarding the request to Tempo. For errors, on-site processes use the on-site
+proxy as their Sentry DSN. The proxy adds `hotkey` and `netuid` event tags before signing the envelope, and the
+central proxy checks those tags against the signed headers before forwarding to the Sentry project for that netuid.
 
 The central role accepts a comma-separated `BITTENSOR_NETUIDS` allow-list such as `2,12,22`; every on-site deployment
 continues to identify itself with one `BITTENSOR_NETUID`. Validator membership is synchronized independently for each
@@ -43,12 +45,14 @@ pdm run manage.py runserver 0.0.0.0:8000
 ```
 
 The development Compose stack starts PostgreSQL, Redis, Bittensor Pylon, node exporter, on-site and central
-Prometheus, Grafana Alloy, and Tempo. The default configuration uses the local Django process as both the on-site and
-central proxy: metrics and traces enter its outbound endpoints, return through its inbound endpoints, and are then
-written to the local Prometheus and Tempo instances.
+Prometheus, Grafana Alloy, and Tempo. It does not start Sentry. The default configuration uses the local Django
+process as both the on-site and central proxy: metrics and traces enter its outbound endpoints, return through its
+inbound endpoints, and are then written to the local Prometheus and Tempo instances. Error forwarding stays disabled
+until `UPSTREAM_SENTRY_DSNS` contains a real project DSN.
 
 This setup requires a working Bittensor wallet so Prometheus can add the hotkey label and the on-site proxy can sign
-requests. Applications can export traces to Alloy over OTLP/gRPC on port `4317` or OTLP/HTTP on port `4318`.
+requests. Applications can export traces to Alloy over OTLP/gRPC on port `4317` or OTLP/HTTP port `4318`. They can
+send errors to the on-site proxy with the DSN `http://public@localhost:8000/1`.
 
 Celery and Celery beat are not required for local development. Instead of periodically synchronizing validators
 through Pylon, manually allow the development wallet for the configured subnet:
@@ -185,19 +189,19 @@ Somewhere, probably in `metrics.py`:
 
 ```python
 some_calculation_time = prometheus_client.Histogram(
-    'some_calculation_time',
-    'How Long it took to calculate something',
-    namespace='django',
-    unit='seconds',
-    labelnames=['task_type_for_example'],
-    buckets=[0.5, 1, *range(2, 30, 2), *range(30, 75, 5), *range(75, 135, 15)]
+    "some_calculation_time",
+    "How Long it took to calculate something",
+    namespace="django",
+    unit="seconds",
+    labelnames=["task_type_for_example"],
+    buckets=[0.5, 1, *range(2, 30, 2), *range(30, 75, 5), *range(75, 135, 15)],
 )
 ```
 
 Somewhere else:
  
 ```python
-with some_calculation_time.labels('blabla').time():
+with some_calculation_time.labels("blabla").time():
     do_some_work()
 ```
 
