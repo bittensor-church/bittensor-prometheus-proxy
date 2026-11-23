@@ -68,6 +68,15 @@ def sentry_outbound_proxy(request, project_id: int):
 class DataError(Exception): ...
 
 
+class UnsupportedAttachmentType(DataError): ...
+
+
+class UnsupportedAttachmentFilename(DataError): ...
+
+
+class UnsupportedEnvelopeItemType(DataError): ...
+
+
 class AuthenticationError(Exception): ...
 
 
@@ -83,6 +92,14 @@ def check_event_tags(payload: bytes, ss58_address: str, netuid: int) -> None:
     tags = event.get("tags")
     if not isinstance(tags, dict) or tags.get("hotkey") != ss58_address or tags.get("netuid") != str(netuid):
         raise AuthenticationError("Event hotkey or netuid tag missing or does not match the authenticated request.")
+
+
+def check_attachment(item_header: dict) -> None:
+    if item_header.get("attachment_type", "event.attachment") != "event.attachment":
+        raise UnsupportedAttachmentType
+    filename = item_header.get("filename")
+    if isinstance(filename, str) and (filename == "__sentry-event" or filename.startswith("__sentry-breadcrumb")):
+        raise UnsupportedAttachmentFilename
 
 
 @csrf_exempt
@@ -111,15 +128,23 @@ def sentry_inbound_proxy(request):
             msg = f"Unsupported envelope item type: {item_header.get('type')}"
             logger.debug(msg)
             return HttpResponse(msg.encode(), status=HTTPStatus.BAD_REQUEST)
-        if item_header.get("type") == "event":
-            try:
-                check_event_tags(payload, ss58_address, netuid)
-            except (DataError, AuthenticationError) as exc:
-                logger.debug(str(exc))
-                return HttpResponse(
-                    status=HTTPStatus.FORBIDDEN if isinstance(exc, AuthenticationError) else HTTPStatus.BAD_REQUEST,
-                    content=str(exc).encode(),
-                )
+        try:
+            type_ = item_header.get("type")
+            match type_:
+                case "event":
+                    check_event_tags(payload, ss58_address, netuid)
+                case "attachment":
+                    check_attachment(item_header)
+                case "client_report":
+                    pass
+                case _:
+                    raise UnsupportedEnvelopeItemType(type_)
+        except (DataError, AuthenticationError) as exc:
+            logger.debug(str(exc))
+            return HttpResponse(
+                status=HTTPStatus.FORBIDDEN if isinstance(exc, AuthenticationError) else HTTPStatus.BAD_REQUEST,
+                content=str(exc).encode(),
+            )
 
     if not (dsn := settings.UPSTREAM_SENTRY_DSNS.get(netuid)):
         msg = f"No Sentry DSN configured for netuid {netuid}."

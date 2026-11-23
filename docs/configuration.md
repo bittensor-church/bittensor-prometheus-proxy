@@ -71,8 +71,10 @@ to `http://bittensor-prometheus-proxy:8000/api/1/envelope/`.
 The on-site proxy writes `hotkey` and `netuid` into each event's tags, signs the envelope, and forwards it once to
 `{CENTRAL_SENTRY_PROXY_URL}/sentry/inbound`. `sentry_sdk` performs the retries.
 
-The central proxy accepts envelope items of type `event`, `attachment`, and `client_report`. It checks that every
-event's `hotkey` and `netuid` tags match the signed headers, then forwards the envelope to the DSN for that netuid.
+The central proxy accepts envelope items of type `event`, `attachment`, and `client_report`. An attachment must be an
+ordinary file: `attachment_type` omitted or `event.attachment`, and a filename other than `__sentry-event` or
+`__sentry-breadcrumb*`. It checks that every event's `hotkey` and `netuid` tags match the signed headers, then
+forwards the envelope to the DSN for that netuid.
 `UPSTREAM_SENTRY_DSNS` is a JSON object whose keys are netuids:
 
 ```dotenv

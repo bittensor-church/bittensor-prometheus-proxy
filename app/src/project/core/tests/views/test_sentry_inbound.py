@@ -123,6 +123,7 @@ def test_forwards_matching_envelope_to_netuid_dsn(client, keypair, upstream):
     data = _envelope(
         _event({"hotkey": keypair.ss58_address, "netuid": "12", "server": "a"}),
         ({"type": "attachment", "filename": "a.txt"}, b"line\nline"),
+        ({"type": "attachment", "filename": "b.txt", "attachment_type": "event.attachment"}, b"ok"),
         ({"type": "client_report"}, b'{"discarded_events":[]}'),
     )
     response = _post(client, keypair, data)
@@ -130,6 +131,23 @@ def test_forwards_matching_envelope_to_netuid_dsn(client, keypair, upstream):
     assert response.content == b'{"id":"abc"}'
     assert response.headers["X-Sentry-Rate-Limits"] == "1"
     assert upstream.calls["ingest_envelope"] == [(DSNS[12], data)]
+
+
+@pytest.mark.django_db
+@override_settings(UPSTREAM_SENTRY_DSNS=DSNS, BITTENSOR_NETUIDS=[12, 22])
+@pytest.mark.parametrize(
+    "header",
+    [
+        {"type": "attachment", "attachment_type": "event.minidump", "filename": "minidump.dmp"},
+        {"type": "attachment", "attachment_type": "event.attachment", "filename": "__sentry-event"},
+        {"type": "attachment", "filename": "__sentry-breadcrumb1"},
+    ],
+)
+def test_event_creating_attachment_is_rejected(client, keypair, upstream, header):
+    Validator.objects.create(public_key=keypair.ss58_address, netuid=12, active=True)
+    response = _post(client, keypair, _envelope((header, b"payload")))
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert upstream.calls["ingest_envelope"] == []
 
 
 @pytest.mark.django_db
