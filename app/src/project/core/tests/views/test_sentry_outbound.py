@@ -1,11 +1,14 @@
 import gzip
 import json
+import tracemalloc
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
+import pytest
 import requests
+from django.test import override_settings
 
-from project.core.proxy_outbound import TIMEOUT
+from project.core.proxy_outbound import TIMEOUT, decompress_body
 from project.core.sentry_envelope import parse_envelope, serialize_envelope
 
 
@@ -105,3 +108,44 @@ def test_upstream_error_returns_500(mock_settings, mock_post, client, keypair):
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert response.content == b"ConnectionError"
     assert mock_post.call_count == 1
+
+
+def test_gzip_output_is_capped_at_the_upload_limit():
+    raw = b"x" * 32
+    compressed = gzip.compress(raw)
+    with override_settings(DATA_UPLOAD_MAX_MEMORY_SIZE=len(raw)):
+        assert decompress_body(compressed, {"Content-Encoding": "gzip"}) == raw
+    with override_settings(DATA_UPLOAD_MAX_MEMORY_SIZE=len(raw) - 1):
+        with pytest.raises(ValueError, match="exceeds"):
+            decompress_body(compressed, {"Content-Encoding": "gzip"})
+
+
+def test_gzip_decompress_does_not_expand_the_whole_body():
+    raw = b"\0" * (4 * 1024 * 1024)
+    compressed = gzip.compress(raw)
+    tracemalloc.start()
+    with override_settings(DATA_UPLOAD_MAX_MEMORY_SIZE=32 * 1024):
+        with pytest.raises(ValueError, match="exceeds"):
+            decompress_body(compressed, {"Content-Encoding": "gzip"})
+    peak = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+    assert peak < len(raw)
+
+
+@patch("project.core.views.sentry.requests.post")
+@patch("project.core.views.sentry.settings")
+def test_oversized_gzip_is_rejected_before_forwarding(mock_settings, mock_post, client):
+    mock_settings.CENTRAL_SENTRY_PROXY_URL = "http://test-central"
+    raw = b"\0" * 4096
+    compressed = gzip.compress(raw)
+    with override_settings(DATA_UPLOAD_MAX_MEMORY_SIZE=len(compressed)):
+        response = client.post(
+            "/api/1/envelope/",
+            data=compressed,
+            content_type="application/x-sentry-envelope",
+            HTTP_CONTENT_ENCODING="gzip",
+        )
+
+    assert len(raw) > len(compressed)
+    assert response.status_code == HTTPStatus.BAD_REQUEST
+    mock_post.assert_not_called()

@@ -1,6 +1,9 @@
 import gzip
+import io
+import zlib
 
 import requests
+from django.conf import settings
 from django.http import HttpResponse
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
@@ -36,12 +39,26 @@ HEADERS_TO_STRIP = HOP_BY_HOP_HEADERS | BODY_ENCODING_HEADERS
 
 
 def decompress_body(data: bytes, headers) -> bytes:
-    encoding = headers.get("Content-Encoding", "")
-    if not encoding:
+    if not (encoding := headers.get("Content-Encoding", "")):
         return data
+
     if any(e.strip().lower() in ("gzip", "x-gzip") for e in encoding.split(",")):
-        return gzip.decompress(data)
+        return _decompress_gzip(data)
+
     raise ValueError(f"Unsupported Content-Encoding: {encoding}")
+
+
+def _decompress_gzip(data: bytes) -> bytes:
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(data)) as gz:
+            body = gz.read(settings.DATA_UPLOAD_MAX_MEMORY_SIZE + 1)
+    except (OSError, EOFError, zlib.error) as exc:
+        raise ValueError(str(exc)) from exc
+
+    if len(body) > settings.DATA_UPLOAD_MAX_MEMORY_SIZE:
+        raise ValueError(f"Body exceeds {settings.DATA_UPLOAD_MAX_MEMORY_SIZE} bytes")
+
+    return body
 
 
 def build_forwarded_response(response):

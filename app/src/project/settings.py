@@ -58,6 +58,8 @@ DEBUG = env("DEBUG", default=False)
 
 ALLOWED_HOSTS = ["*"]
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024
+
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
