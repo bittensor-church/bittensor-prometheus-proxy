@@ -53,6 +53,7 @@ def test_stamps_signs_and_copies_response(mock_settings, mock_post, client, keyp
         "/api/1/envelope/",
         data=_envelope(tags={"hotkey": "5Fake", "netuid": "1", "server": "a"}),
         content_type="application/x-sentry-envelope",
+        HTTP_HOST="on-site.local:8000",
     )
 
     assert response.status_code == HTTPStatus.ACCEPTED
@@ -65,10 +66,33 @@ def test_stamps_signs_and_copies_response(mock_settings, mock_post, client, keyp
     sent_headers = mock_post.call_args.kwargs["headers"]
     assert mock_post.call_args.args[0] == "http://test-central/sentry/inbound"
     assert mock_post.call_args.kwargs["timeout"] == TIMEOUT
+    assert sent_headers["Host"] == "test-central"
     assert sent_headers["Bittensor-Hotkey"] == keypair.ss58_address
     assert sent_headers["Bittensor-Netuid"] == "12"
     assert keypair.verify(forwarded, "0x" + sent_headers["Bittensor-Signature"])
+    assert mock_post.call_args.kwargs["allow_redirects"] is False
     assert mock_post.call_count == 1
+
+
+@patch("project.core.views.sentry.requests.post")
+@patch("project.core.views.sentry.settings")
+def test_redirect_is_returned_without_a_location(mock_settings, mock_post, client, keypair):
+    mock_settings.CENTRAL_SENTRY_PROXY_URL = "http://test-central"
+    mock_settings.BITTENSOR_NETUID = 12
+    mock_settings.BITTENSOR_WALLET.return_value.hotkey = keypair
+    mock_post.return_value = _upstream(
+        status=HTTPStatus.FOUND,
+        content=b"login",
+        headers={"Location": "http://test-central/login", "X-Sentry-Rate-Limits": "1"},
+    )
+
+    response = client.post("/api/1/envelope/", data=_envelope(), content_type="application/x-sentry-envelope")
+
+    assert response.status_code == HTTPStatus.FOUND
+    assert response.content == b"login"
+    assert "Location" not in response.headers
+    assert response.headers["X-Sentry-Rate-Limits"] == "1"
+    assert mock_post.call_args.kwargs["allow_redirects"] is False
 
 
 @patch("project.core.views.sentry.requests.post")

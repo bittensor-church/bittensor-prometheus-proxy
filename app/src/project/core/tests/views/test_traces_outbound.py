@@ -70,7 +70,7 @@ def test_overwrites_existing_hotkey(mock_settings, mock_session, client, keypair
 @patch("project.core.views.traces.session")
 @patch("project.core.views.traces.settings")
 def test_sends_auth_headers(mock_settings, mock_session, client, keypair, make_traces_body):
-    mock_settings.CENTRAL_TEMPO_PROXY_URL = "http://test-central"
+    mock_settings.CENTRAL_TEMPO_PROXY_URL = "http://central.example:8443"
     mock_settings.BITTENSOR_NETUID = 12
     mock_settings.BITTENSOR_WALLET.return_value.hotkey = keypair
 
@@ -80,9 +80,15 @@ def test_sends_auth_headers(mock_settings, mock_session, client, keypair, make_t
     mock_response.headers = {}
     mock_session.post.return_value = mock_response
 
-    client.post("/traces/outbound", data=make_traces_body(), content_type="application/x-protobuf")
+    client.post(
+        "/traces/outbound",
+        data=make_traces_body(),
+        content_type="application/x-protobuf",
+        HTTP_HOST="on-site.local:8000",
+    )
 
     sent_headers = mock_session.post.call_args.kwargs["headers"]
+    assert sent_headers["Host"] == "central.example:8443"
     assert sent_headers["Bittensor-Hotkey"] == keypair.ss58_address
     assert sent_headers["Bittensor-Netuid"] == "12"
     assert "Bittensor-Signature" in sent_headers

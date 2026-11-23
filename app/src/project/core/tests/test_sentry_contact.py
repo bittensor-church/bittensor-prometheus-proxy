@@ -12,7 +12,7 @@ from project.core.tests.mock_contact import MockSentryContact
 
 
 @contextmanager
-def _listen(status: int):
+def _listen(status: int, *, location: str | None = None):
     received: list[tuple[str, str | None, str | None, bytes]] = []
 
     class _Handler(BaseHTTPRequestHandler):
@@ -23,6 +23,17 @@ def _listen(status: int):
             payload = b'{"id":"abc"}'
             self.send_response(status)
             self.send_header("Content-Type", "application/json")
+            if location:
+                self.send_header("Location", location)
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+        def do_GET(self):
+            received.append((self.path, None, None, b""))
+            payload = b"login"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
             self.send_header("Content-Length", str(len(payload)))
             self.end_headers()
             self.wfile.write(payload)
@@ -69,6 +80,16 @@ def test_ingest_rewrites_dsn_and_posts_once():
     assert header["event_id"] == "abc"
     assert items[0][1] == b'{"message":"boom"}'
     assert items[1][1] == b"line\nline"
+
+
+def test_redirect_is_not_followed():
+    with _listen(302, location="/login") as (server, received):
+        port = server.server_address[1]
+        response = SentryContact().ingest_envelope(f"http://public@127.0.0.1:{port}/42", _envelope())
+
+    assert response.status_code == 302
+    assert len(received) == 1
+    assert received[0][0] == "/api/42/envelope/"
 
 
 def test_upstream_error_is_returned_without_retry():

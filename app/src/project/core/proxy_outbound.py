@@ -33,6 +33,7 @@ BODY_ENCODING_HEADERS = frozenset({"content-encoding", "content-length"})
 
 # Stripped from headers forwarded in either direction: hop-by-hop headers must never cross a
 # proxy boundary, and body-encoding headers go stale whenever we decompress/modify the body.
+# Host is included so outbound callers can set it from the target URL.
 # requests also auto-decompresses response.content, so those go stale there too; Django
 # recalculates Content-Length from the actual content passed to HttpResponse.
 HEADERS_TO_STRIP = HOP_BY_HOP_HEADERS | BODY_ENCODING_HEADERS
@@ -62,9 +63,10 @@ def _decompress_gzip(data: bytes) -> bytes:
 
 
 def build_forwarded_response(response):
+    strip_also = {"location"} if 300 <= response.status_code < 400 else set()
     return HttpResponse(
         status=response.status_code,
-        headers={k: v for k, v in response.headers.items() if k.lower() not in HEADERS_TO_STRIP},
+        headers={k: v for k, v in response.headers.items() if k.lower() not in (HEADERS_TO_STRIP | strip_also)},
         content=response.content,
     )
 

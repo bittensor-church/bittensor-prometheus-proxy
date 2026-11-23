@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from urllib.parse import urlsplit
 
 import requests
 import structlog
@@ -95,8 +96,10 @@ def traces_outbound_proxy(request):
             headers={
                 **{k: v for k, v in request.headers.items() if k.lower() not in HEADERS_TO_STRIP},
                 **build_bittensor_outbound_headers(modified_data, hotkey, settings.BITTENSOR_NETUID),
+                "Host": urlsplit(tempo_remote_url).netloc,
             },
             timeout=TIMEOUT,
+            allow_redirects=False,
         )
     except requests.exceptions.RequestException as e:
         return HttpResponse(status=HTTPStatus.INTERNAL_SERVER_ERROR, content=type(e).__name__)

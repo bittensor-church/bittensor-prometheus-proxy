@@ -17,7 +17,9 @@ class TempoContact(AbstractTempoContact):
 
     def push_traces(self, data: bytes, content_type: str) -> requests.Response:
         url = f"{settings.UPSTREAM_TEMPO_URL.rstrip('/')}/v1/traces"
-        return session.post(url, data=data, headers={"Content-Type": content_type}, timeout=TIMEOUT)
+        return session.post(
+            url, data=data, headers={"Content-Type": content_type}, timeout=TIMEOUT, allow_redirects=False
+        )
 
 
 @functools.cache

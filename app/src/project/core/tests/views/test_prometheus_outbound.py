@@ -27,7 +27,9 @@ def test_sends_netuid_header(mock_settings, mock_session, client, keypair):
         "/prometheus/outbound",
         data=b"some-metric-data",
         content_type="application/octet-stream",
+        HTTP_HOST="on-site.local:8000",
     )
 
     sent_headers = mock_session.post.call_args[1]["headers"]
+    assert sent_headers["Host"] == "test-central"
     assert sent_headers["Bittensor-Netuid"] == "12"

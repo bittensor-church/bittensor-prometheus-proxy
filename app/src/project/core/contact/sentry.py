@@ -30,6 +30,7 @@ class SentryContact(AbstractSentryContact):
                 ),
             },
             timeout=TIMEOUT,
+            allow_redirects=False,
         )
 
 

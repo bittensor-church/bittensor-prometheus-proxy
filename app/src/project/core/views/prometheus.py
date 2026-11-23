@@ -1,4 +1,5 @@
 from http import HTTPStatus
+from urllib.parse import urlsplit
 
 import requests
 import snappy
@@ -57,8 +58,10 @@ def prometheus_outbound_proxy(request):
             headers={
                 **request.headers,
                 **build_bittensor_outbound_headers(data, wallet.hotkey, settings.BITTENSOR_NETUID),
+                "Host": urlsplit(prometheus_remote_url).netloc,
             },
             timeout=TIMEOUT,
+            allow_redirects=False,
         )
     except requests.exceptions.RequestException as e:
         logger.info(f"Sending to central prometheus proxy failed: {e}")
@@ -119,6 +122,7 @@ def prometheus_inbound_proxy(request):
             data=data,
             headers=dict(request.headers),
             timeout=TIMEOUT,
+            allow_redirects=False,
         )
     except requests.exceptions.RequestException as e:
         return HttpResponse(status=HTTPStatus.INTERNAL_SERVER_ERROR, content=type(e).__name__)
