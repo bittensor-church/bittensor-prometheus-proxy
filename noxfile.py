@@ -154,7 +154,7 @@ def test(session):
             "-n",
             "auto",
             "-m",
-            "not integration",
+            "not integration and not e2e",
             "project",
             *session.posargs,
             # bittensor unconditionally creates ~/.bittensor/miners on import;
@@ -178,4 +178,25 @@ def test_integration(session):
             "project",
             *session.posargs,
             env={"HOME": tempfile.gettempdir()},
+        )
+
+
+@nox.session(python=PYTHON_DEFAULT_VERSION, name="test_e2e")
+def test_e2e(session):
+    install(session, "test")
+    with session.chdir(str(APP_ROOT)):
+        session.run(
+            "pytest",
+            "-W",
+            "ignore::DeprecationWarning",
+            "-s",
+            "-vv",
+            "-m",
+            "e2e",
+            "project",
+            *session.posargs,
+            env={
+               "HOME": tempfile.gettempdir(),
+                "E2E_TESTS_SENTRY_TARGET_DSN": os.environ.get("E2E_TESTS_SENTRY_TARGET_DSN", ""),
+            },
         )

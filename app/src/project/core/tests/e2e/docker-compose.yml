@@ -1,0 +1,84 @@
+name: sentry-e2e
+
+services:
+  db:
+    image: postgres:14.24-alpine@sha256:50fce0c9c54c43d8b02ce16cb9daff75eb94c09c4ee3d41c157852ebd9700c80
+    environment:
+      POSTGRES_DB: project
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "12345"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d project"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:6-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  inbound:
+    build: &app
+      context: ../../../../../../
+      dockerfile: app/envs/prod/Dockerfile
+    image: bittensor-prometheus-proxy-e2e
+    command: ["sh", "/inbound.sh", "12"]
+    environment:
+      ENV: e2e
+      SECRET_KEY: e2e
+      HOME: /tmp
+      GUNICORN_MAX_WORKERS: "1"
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus
+      BITTENSOR_NETUIDS: "12"
+      PYLON_ENDPOINT: http://127.0.0.1:9
+      DATABASE_URL: postgres://postgres:12345@db:5432/project
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      UPSTREAM_SENTRY_DSNS: '{"12":"${E2E_TESTS_SENTRY_TARGET_DSN:?E2E_TESTS_SENTRY_TARGET_DSN is required}"}'
+    volumes:
+      - wallets:/wallets
+      - ./inbound.sh:/inbound.sh:ro
+      - ./wallet_init.py:/wallet_init.py:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck: &http
+      test: ["CMD", "python", "-c", "import socket; s=socket.create_connection(('127.0.0.1', 8000), 2); s.close()"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+
+  outbound:
+    build: *app
+    image: bittensor-prometheus-proxy-e2e
+    command: ["sh", "-c", "./prometheus-cleanup.sh && exec gunicorn -c gunicorn.conf.py --timeout 120"]
+    environment:
+      ENV: e2e
+      SECRET_KEY: e2e
+      HOME: /tmp
+      GUNICORN_MAX_WORKERS: "1"
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus
+      BITTENSOR_NETUID: "12"
+      BITTENSOR_WALLET_DIRECTORY: /wallets
+      BITTENSOR_WALLET_NAME: e2e
+      BITTENSOR_WALLET_HOTKEY_NAME: default
+      CENTRAL_SENTRY_PROXY_URL: http://inbound:8000
+    volumes:
+      - wallets:/wallets
+    ports:
+      - "18000:8000"
+    depends_on:
+      inbound:
+        condition: service_healthy
+    healthcheck: *http
+
+volumes:
+  wallets:

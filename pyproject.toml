@@ -16,7 +16,7 @@ dependencies = [
     "gunicorn==22.0.0",
     "psycopg[binary]~=3.1.19",
     "redis~=4.6.0",
-    "sentry-sdk==1.45.1",
+    "sentry-sdk==2.76.0",
     "ipython~=8.14.0",
     "nox==2023.4.22",
     "more-itertools~=10.3.0",
@@ -52,8 +52,10 @@ testpaths = ["app/src/project"]
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 DJANGO_SETTINGS_MODULE = "project.core.tests.settings"
 norecursedirs = [".*", "build", "dist", "CVS", "_darcs", "{arch}", "*.egg", "venv", "node_modules", "db"]
+addopts = ["-m", "not e2e"]
 markers = [
     "integration: requires external services (Tempo); run with nox -s test_integration",
+    "e2e: inbound and outbound containers forwarding one event to the DSN in E2E_TESTS_SENTRY_TARGET_DSN; run with nox -s test_e2e",
 ]
 
 [tool.pdm.dev-dependencies]
