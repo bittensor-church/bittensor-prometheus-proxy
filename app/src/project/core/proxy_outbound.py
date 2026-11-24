@@ -33,7 +33,7 @@ BODY_ENCODING_HEADERS = frozenset({"content-encoding", "content-length"})
 
 # Stripped from headers forwarded in either direction: hop-by-hop headers must never cross a
 # proxy boundary, and body-encoding headers go stale whenever we decompress/modify the body.
-# Host is included so outbound callers can set it from the target URL.
+# Host stays; outbound callers overwrite it with the target URL's host.
 # requests also auto-decompresses response.content, so those go stale there too; Django
 # recalculates Content-Length from the actual content passed to HttpResponse.
 HEADERS_TO_STRIP = HOP_BY_HOP_HEADERS | BODY_ENCODING_HEADERS

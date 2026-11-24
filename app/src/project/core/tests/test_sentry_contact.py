@@ -76,7 +76,7 @@ def test_ingest_rewrites_dsn_and_posts_once():
     assert authorization is None
     assert auth == "Sentry sentry_version=7, sentry_client=bittensor-prometheus-proxy/0, sentry_key=public-key"
     header, items = parse_envelope(body)
-    assert header["dsn"] == dsn
+    assert header["dsn"] == f"http://public-key@127.0.0.1:{port}/prefix/42"
     assert header["event_id"] == "abc"
     assert items[0][1] == b'{"message":"boom"}'
     assert items[1][1] == b"line\nline"

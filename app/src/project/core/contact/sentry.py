@@ -17,9 +17,9 @@ class SentryContact(AbstractSentryContact):
     """Forwards one Sentry envelope to the project identified by a DSN."""
 
     def ingest_envelope(self, dsn: str, envelope: bytes) -> requests.Response:
-        url, public_key = _envelope_endpoint(dsn)
+        url, public_key, public_dsn = _envelope_endpoint(dsn)
         header, items = parse_envelope(envelope)
-        header["dsn"] = dsn
+        header["dsn"] = public_dsn
         return requests.post(
             url,
             data=serialize_envelope(header, items),
@@ -34,7 +34,7 @@ class SentryContact(AbstractSentryContact):
         )
 
 
-def _envelope_endpoint(dsn: str) -> tuple[str, str]:
+def _envelope_endpoint(dsn: str) -> tuple[str, str, str]:
     parsed = urlparse(dsn)
     path = parsed.path.rstrip("/")
     prefix, _, project_id = path.rpartition("/")
@@ -52,7 +52,9 @@ def _envelope_endpoint(dsn: str) -> tuple[str, str]:
         raise ValueError("Invalid Sentry DSN.")
     if parsed.port:
         host = f"{host}:{parsed.port}"
-    return f"{parsed.scheme}://{host}{prefix}/api/{project_id}/envelope/", public_key
+    endpoint = f"{parsed.scheme}://{host}{prefix}/api/{project_id}/envelope/"
+    public_dsn = f"{parsed.scheme}://{public_key}@{host}{prefix}/{project_id}"
+    return endpoint, public_key, public_dsn
 
 
 @functools.cache

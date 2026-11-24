@@ -136,17 +136,27 @@ def test_forwards_matching_envelope_to_netuid_dsn(client, keypair, upstream):
 @pytest.mark.django_db
 @override_settings(UPSTREAM_SENTRY_DSNS=DSNS, BITTENSOR_NETUIDS=[12, 22])
 @pytest.mark.parametrize(
-    "header",
+    ("header", "message"),
     [
-        {"type": "attachment", "attachment_type": "event.minidump", "filename": "minidump.dmp"},
-        {"type": "attachment", "attachment_type": "event.attachment", "filename": "__sentry-event"},
-        {"type": "attachment", "filename": "__sentry-breadcrumb1"},
+        (
+            {"type": "attachment", "attachment_type": "event.minidump", "filename": "minidump.dmp"},
+            b"Unsupported attachment type: event.minidump",
+        ),
+        (
+            {"type": "attachment", "attachment_type": "event.attachment", "filename": "__sentry-event"},
+            b"Unsupported attachment filename: __sentry-event",
+        ),
+        (
+            {"type": "attachment", "filename": "__sentry-breadcrumb1"},
+            b"Unsupported attachment filename: __sentry-breadcrumb1",
+        ),
     ],
 )
-def test_event_creating_attachment_is_rejected(client, keypair, upstream, header):
+def test_event_creating_attachment_is_rejected(client, keypair, upstream, header, message):
     Validator.objects.create(public_key=keypair.ss58_address, netuid=12, active=True)
     response = _post(client, keypair, _envelope((header, b"payload")))
     assert response.status_code == HTTPStatus.BAD_REQUEST
+    assert response.content == message
     assert upstream.calls["ingest_envelope"] == []
 
 

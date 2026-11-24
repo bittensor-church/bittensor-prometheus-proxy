@@ -98,11 +98,11 @@ def check_event_tags(payload: bytes, ss58_address: str, netuid: int) -> None:
 
 
 def check_attachment(item_header: dict) -> None:
-    if item_header.get("attachment_type", "event.attachment") != "event.attachment":
-        raise UnsupportedAttachmentType
+    if (attachment_type := item_header.get("attachment_type", "event.attachment")) != "event.attachment":
+        raise UnsupportedAttachmentType(f"Unsupported attachment type: {attachment_type}")
     filename = item_header.get("filename")
     if isinstance(filename, str) and (filename == "__sentry-event" or filename.startswith("__sentry-breadcrumb")):
-        raise UnsupportedAttachmentFilename
+        raise UnsupportedAttachmentFilename(f"Unsupported attachment filename: {filename}")
 
 
 @csrf_exempt
