@@ -88,6 +88,18 @@ services:
       retries: 20
       start_period: 10s
 
+  loki:
+    image: grafana/loki:3.4.2
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "/busybox/wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3100/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
   alloy:
     image: grafana/alloy:v1.21.1@sha256:4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8
     volumes:
@@ -101,3 +113,23 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  alloy-logs:
+    image: grafana/alloy:v1.21.1@sha256:4039c971193053a84e53dd9ed3e7d4561c069256b024631cd3498a353ed7ece8
+    volumes:
+      - ./alloy/logs.alloy:/etc/alloy/logs.alloy
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-logs-data:/var/lib/alloy
+    environment:
+      - ON_SITE_PROXY_URL=${ON_SITE_PROXY_URL:-http://host.docker.internal:8000}
+      - LOKI_REFRESH_INTERVAL=${LOKI_REFRESH_INTERVAL:-5s}
+      - LOKI_CLIENT=${LOKI_CLIENT:-dev}
+      - LOKI_CLIENT_SERVER_GROUP=${LOKI_CLIENT_SERVER_GROUP:-dev}
+    command:
+      - run
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/logs.alloy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  alloy-logs-data:

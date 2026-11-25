@@ -356,6 +356,8 @@ CENTRAL_SENTRY_PROXY_URL = env.str("CENTRAL_SENTRY_PROXY_URL", default="")
 UPSTREAM_SENTRY_DSNS: dict[int, str] = {
     int(netuid): dsn for netuid, dsn in env.json("UPSTREAM_SENTRY_DSNS", default={}).items()
 }
+CENTRAL_LOKI_PROXY_URL = env.str("CENTRAL_LOKI_PROXY_URL", default="")
+UPSTREAM_LOKI_URL = env.str("UPSTREAM_LOKI_URL", default="")
 if not any(
     [
         UPSTREAM_PROMETHEUS_URL,
@@ -364,12 +366,14 @@ if not any(
         CENTRAL_TEMPO_PROXY_URL,
         CENTRAL_SENTRY_PROXY_URL,
         UPSTREAM_SENTRY_DSNS,
+        UPSTREAM_LOKI_URL,
+        CENTRAL_LOKI_PROXY_URL,
     ]
 ):
     raise RuntimeError(
         "At least one of UPSTREAM_PROMETHEUS_URL, CENTRAL_PROMETHEUS_PROXY_URL, "
         "UPSTREAM_TEMPO_URL, CENTRAL_TEMPO_PROXY_URL, CENTRAL_SENTRY_PROXY_URL, "
-        "or UPSTREAM_SENTRY_DSNS must be set"
+        "UPSTREAM_SENTRY_DSNS, UPSTREAM_LOKI_URL, or CENTRAL_LOKI_PROXY_URL must be set"
     )
 
 # Central proxy: list of supported netuids, e.g. "12,22" -> [12, 22]
@@ -379,7 +383,7 @@ BITTENSOR_NETUIDS: list[int] = [int(n) for n in _netuids_raw]
 PYLON_ENDPOINT = env.str("PYLON_ENDPOINT", default="")
 PYLON_OPEN_ACCESS_TOKEN = env.str("PYLON_OPEN_ACCESS_TOKEN", default="")
 
-if UPSTREAM_PROMETHEUS_URL or UPSTREAM_TEMPO_URL or UPSTREAM_SENTRY_DSNS:
+if UPSTREAM_PROMETHEUS_URL or UPSTREAM_TEMPO_URL or UPSTREAM_SENTRY_DSNS or UPSTREAM_LOKI_URL:
     if not BITTENSOR_NETUIDS:
         raise RuntimeError("BITTENSOR_NETUIDS must be set when a central upstream is configured")
     if not PYLON_ENDPOINT:
@@ -400,7 +404,7 @@ BITTENSOR_WALLET_DIRECTORY = env.path(
 BITTENSOR_WALLET_NAME = env.str("BITTENSOR_WALLET_NAME", default=None)
 BITTENSOR_WALLET_HOTKEY_NAME = env.str("BITTENSOR_WALLET_HOTKEY_NAME", default=None)
 
-if CENTRAL_PROMETHEUS_PROXY_URL or CENTRAL_TEMPO_PROXY_URL or CENTRAL_SENTRY_PROXY_URL:
+if CENTRAL_PROMETHEUS_PROXY_URL or CENTRAL_TEMPO_PROXY_URL or CENTRAL_SENTRY_PROXY_URL or CENTRAL_LOKI_PROXY_URL:
     if BITTENSOR_NETUID is None:
         raise RuntimeError("BITTENSOR_NETUID must be set when any CENTRAL_*_PROXY_URL is defined")
     if BITTENSOR_WALLET_NAME is None or BITTENSOR_WALLET_HOTKEY_NAME is None:

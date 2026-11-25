@@ -26,14 +26,10 @@ loki.source.docker "containerlogs" {
     refresh_interval = sys.env("LOKI_REFRESH_INTERVAL")
 }
 
+// Forward logs to the on-site proxy. It adds hotkey and netuid, then signs the push.
 loki.write "default" {
     endpoint {
-        url = sys.env("LOKI_URL") + "/loki/api/v1/push"
-
-        basic_auth {
-            username = sys.env("LOKI_USER")
-            password = sys.env("LOKI_PASSWORD")
-        }
+        url = string.trim_suffix(sys.env("ON_SITE_PROXY_URL"), "/") + "/loki/outbound"
     }
 
     external_labels = {

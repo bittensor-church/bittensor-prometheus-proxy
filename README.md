@@ -1,13 +1,13 @@
 # bittensor-prometheus-proxy
 
-A Bittensor-authenticated observability proxy for Prometheus remote-write metrics, OpenTelemetry traces, and Sentry error events.
+A Bittensor-authenticated observability proxy for Prometheus remote-write metrics, OpenTelemetry traces, Loki logs, and Sentry error events.
 
 The proxy can run in either of two roles:
 
 | Role | Responsibility |
 |---|---|
 | On-site | Uses one validator wallet and one netuid, attaches that identity to telemetry, signs the payload, and sends it to a central proxy. |
-| Central | Supports one or more netuids, checks the signed identity against the active validator set, validates the payload identity, and forwards accepted telemetry to Prometheus, Tempo, or Sentry. |
+| Central | Supports one or more netuids, checks the signed identity against the active validator set, validates the payload identity, and forwards accepted telemetry to Prometheus, Tempo, Loki, or Sentry. |
 
 For metrics, the on-site Prometheus includes the validator hotkey as a label. The central proxy verifies that every
 time series contains the authenticated hotkey. For traces, Grafana Alloy sends OTLP data to the on-site proxy, which
@@ -15,6 +15,8 @@ upserts `hotkey` and `netuid` resource attributes before signing it. The central
 hotkey on every OTLP resource before forwarding the request to Tempo. For errors, on-site processes use the on-site
 proxy as their Sentry DSN. The proxy adds `hotkey` and `netuid` event tags before signing the envelope, and the
 central proxy checks those tags against the signed headers before forwarding to the Sentry project for that netuid.
+For logs, Grafana Alloy reads container logs and pushes them to the on-site proxy. The proxy adds `hotkey` and
+`netuid` stream labels, signs the payload, and the central proxy checks those labels before writing to Loki.
 
 The central role accepts a comma-separated `BITTENSOR_NETUIDS` allow-list such as `2,12,22`; every on-site deployment
 continues to identify itself with one `BITTENSOR_NETUID`. Validator membership is synchronized independently for each
@@ -45,10 +47,10 @@ pdm run manage.py runserver 0.0.0.0:8000
 ```
 
 The development Compose stack starts PostgreSQL, Redis, Bittensor Pylon, node exporter, on-site and central
-Prometheus, Grafana Alloy, and Tempo. It does not start Sentry. The default configuration uses the local Django
-process as both the on-site and central proxy: metrics and traces enter its outbound endpoints, return through its
-inbound endpoints, and are then written to the local Prometheus and Tempo instances. Error forwarding stays disabled
-until `UPSTREAM_SENTRY_DSNS` contains a real project DSN.
+Prometheus, Grafana Alloy, Tempo, and Loki. It does not start Sentry. The default configuration uses the local Django
+process as both the on-site and central proxy: metrics, traces, and logs enter its outbound endpoints, return through
+its inbound endpoints, and are then written to the local Prometheus, Tempo, and Loki instances. Error forwarding stays
+disabled until `UPSTREAM_SENTRY_DSNS` contains a real project DSN.
 
 This setup requires a working Bittensor wallet so Prometheus can add the hotkey label and the on-site proxy can sign
 requests. Applications can export traces to Alloy over OTLP/gRPC on port `4317` or OTLP/HTTP port `4318`. They can

@@ -54,7 +54,7 @@ DJANGO_SETTINGS_MODULE = "project.core.tests.settings"
 norecursedirs = [".*", "build", "dist", "CVS", "_darcs", "{arch}", "*.egg", "venv", "node_modules", "db"]
 addopts = ["-m", "not e2e"]
 markers = [
-    "integration: requires external services (Tempo); run with nox -s test_integration",
+    "integration: requires external services (Tempo, Prometheus, Loki); run with nox -s test_integration",
     "e2e: inbound and outbound containers forwarding one event to the DSN in E2E_TESTS_SENTRY_TARGET_DSN; run with nox -s test_e2e",
 ]
 

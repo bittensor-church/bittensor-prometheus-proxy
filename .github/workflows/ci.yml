@@ -79,7 +79,7 @@ jobs:
       - name: Prepare environment
         run: ./setup-dev.sh
       - name: Start services
-        run: docker compose up -d --wait db redis tempo central-prometheus
+        run: docker compose up -d --wait db redis tempo central-prometheus loki
       - name: Run migrations
         run: cd app/src && pdm run python manage.py wait_for_database --timeout 120 && pdm run python manage.py migrate
         env:

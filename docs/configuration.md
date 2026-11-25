@@ -4,7 +4,7 @@ The proxy can run as an on-site sender, a central receiver, or both roles in one
 role by setting at least one destination in its direction:
 
 - `CENTRAL_*_PROXY_URL` sends telemetry from an on-site proxy to a central proxy.
-- `UPSTREAM_*_URL` sends accepted metrics or traces from a central proxy to its storage backend.
+- `UPSTREAM_*_URL` sends accepted metrics, traces, or logs from a central proxy to its storage backend.
 - `UPSTREAM_SENTRY_DSNS` sends accepted error envelopes from a central proxy to Sentry. Its value is a JSON object of Sentry DSNs.
 
 At least one of these must be configured or the application will refuse to start.
@@ -16,9 +16,11 @@ At least one of these must be configured or the application will refuse to start
 | On-site metrics | `CENTRAL_PROMETHEUS_PROXY_URL` | `BITTENSOR_NETUID` and wallet configuration |
 | On-site traces | `CENTRAL_TEMPO_PROXY_URL` | `BITTENSOR_NETUID` and wallet configuration |
 | On-site errors | `CENTRAL_SENTRY_PROXY_URL` | `BITTENSOR_NETUID` and wallet configuration |
+| On-site logs | `CENTRAL_LOKI_PROXY_URL` | `BITTENSOR_NETUID` and wallet configuration |
 | Central metrics | `UPSTREAM_PROMETHEUS_URL` | `BITTENSOR_NETUIDS`, Pylon, PostgreSQL, and Redis |
 | Central traces | `UPSTREAM_TEMPO_URL` | `BITTENSOR_NETUIDS`, Pylon, PostgreSQL, and Redis |
 | Central errors | `UPSTREAM_SENTRY_DSNS` | `BITTENSOR_NETUIDS`, Pylon, PostgreSQL, and Redis |
+| Central logs | `UPSTREAM_LOKI_URL` | `BITTENSOR_NETUIDS`, Pylon, PostgreSQL, and Redis |
 
 When several signals are enabled for a role, their shared settings only need to be supplied once.
 
@@ -57,10 +59,28 @@ DSNs, and the proxy derives each project's envelope URL from its DSN.
 | `UPSTREAM_TEMPO_URL` | Central | `/v1/traces` | Tempo OTLP/HTTP receiver. |
 | `CENTRAL_SENTRY_PROXY_URL` | On-site | `/sentry/inbound` | Central proxy that receives signed Sentry envelopes. |
 | `UPSTREAM_SENTRY_DSNS` | Central | `/api/<project_id>/envelope/` | JSON map of netuid to Sentry DSN. The envelope path comes from the DSN's project id. |
-| `ON_SITE_PROXY_URL` | Alloy | `/traces/outbound` | Base URL of the on-site Django proxy. This is consumed by Alloy, not Django. |
+| `CENTRAL_LOKI_PROXY_URL` | On-site | `/loki/inbound` | Central proxy that receives signed Loki push requests. |
+| `UPSTREAM_LOKI_URL` | Central | `/loki/api/v1/push` | Loki server. Basic auth, when required, is `user:password` in this URL. |
+| `ON_SITE_PROXY_URL` | Alloy | `/traces/outbound`, `/loki/outbound` | Base URL of the on-site Django proxy. This is consumed by Alloy, not Django. |
 
 The provided Alloy configuration listens for application traces on OTLP/gRPC port `4317` and OTLP/HTTP port `4318`.
-It tail-samples and batches traces before forwarding them to the on-site proxy.
+It tail-samples and batches traces before forwarding them to the on-site proxy. A second Alloy reads container logs
+and pushes them to `{ON_SITE_PROXY_URL}/loki/outbound`.
+
+## Logs
+
+On-site Alloy keeps the container name and log stream labels from the cookiecutter log pipeline, plus `client` and
+`client_server_group`. It posts each batch to the on-site proxy and retries from the response it gets back.
+
+The on-site proxy adds `hotkey` and `netuid` to every stream, signs the snappy protobuf body, and forwards it once to
+`{CENTRAL_LOKI_PROXY_URL}/loki/inbound`. The central proxy checks the signature and those labels, then writes the same
+body to Loki. One Loki URL serves every netuid; filter on the labels.
+
+```dotenv
+UPSTREAM_LOKI_URL=https://loki.example.com
+```
+
+When that Loki requires basic auth, put the credentials in the URL: `https://user:password@loki.example.com`.
 
 ## Sentry
 
@@ -99,7 +119,7 @@ Configure one database URL and the Redis connection:
 
 ## On-site example
 
-This deployment sends metrics, traces, and errors for netuid 12:
+This deployment sends metrics, traces, logs, and errors for netuid 12:
 
 ```dotenv
 BITTENSOR_NETUID=12
@@ -110,6 +130,7 @@ BITTENSOR_WALLET_HOTKEY_NAME=default
 CENTRAL_PROMETHEUS_PROXY_URL=https://telemetry.example.com
 CENTRAL_TEMPO_PROXY_URL=https://telemetry.example.com
 CENTRAL_SENTRY_PROXY_URL=https://telemetry.example.com
+CENTRAL_LOKI_PROXY_URL=https://telemetry.example.com
 
 # Use the Compose service URL when Alloy and Django share a Docker network.
 ON_SITE_PROXY_URL=http://app:8000
@@ -130,6 +151,7 @@ PYLON_OPEN_ACCESS_TOKEN=replace-me
 UPSTREAM_PROMETHEUS_URL=http://prometheus:9090
 UPSTREAM_TEMPO_URL=http://tempo:4319
 UPSTREAM_SENTRY_DSNS={"2":"https://<public_key>@sentry.reef.pl/<project_id>","12":"https://<public_key>@sentry.reef.pl/<project_id>","22":"https://<public_key>@sentry.reef.pl/<project_id>"}
+UPSTREAM_LOKI_URL=https://loki.example.com
 
 DATABASE_POOL_URL=
 DATABASE_URL=postgres://postgres:replace-me@db:5432/project
@@ -138,13 +160,14 @@ REDIS_PORT=6379
 CELERY_BROKER_URL=redis://redis:6379/0
 ```
 
-Do not configure `CENTRAL_PROMETHEUS_PROXY_URL`, `CENTRAL_TEMPO_PROXY_URL`, `CENTRAL_SENTRY_PROXY_URL`, or wallet
-settings unless this process also acts as an on-site proxy.
+Do not configure `CENTRAL_PROMETHEUS_PROXY_URL`, `CENTRAL_TEMPO_PROXY_URL`, `CENTRAL_SENTRY_PROXY_URL`,
+`CENTRAL_LOKI_PROXY_URL`, or wallet settings unless this process also acts as an on-site proxy.
 
 ## Combined development mode
 
-The development template sets the `CENTRAL_*_PROXY_URL` variables and the metrics and traces upstream URLs. A single
-Django process therefore performs an on-site outbound request back to its own central inbound endpoint, allowing the
-complete signing and validation flow to be exercised locally. `UPSTREAM_SENTRY_DSNS` is `{}` in that template, so
-central Sentry forwarding stays disabled until it contains a real project DSN, such as one on sentry.reef.pl. The
-development stack does not run Sentry. See [`envs/dev/.env.template`](../envs/dev/.env.template) for the full example.
+The development template sets the `CENTRAL_*_PROXY_URL` variables and the metrics, traces, and logs upstream URLs. A
+single Django process therefore performs an on-site outbound request back to its own central inbound endpoint, allowing
+the complete signing and validation flow to be exercised locally. `UPSTREAM_LOKI_URL` points at the local Loki on port
+`3100`. `UPSTREAM_SENTRY_DSNS` is `{}` in that template, so central Sentry forwarding stays disabled until it contains a
+real project DSN, such as one on sentry.reef.pl. The development stack does not run Sentry. See
+[`envs/dev/.env.template`](../envs/dev/.env.template) for the full example.
